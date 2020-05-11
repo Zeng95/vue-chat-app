@@ -1,6 +1,13 @@
 <template>
   <div class="login">
-    <NavBar />
+    <b-jumbotron
+      class="text-center"
+      text-variant="primary"
+      bg-variant="transparent"
+      header="Real-Time Chat"
+      lead="Powered by Vue.js & Firebase"
+      lead-tag="h5"
+    />
 
     <b-container>
       <b-row>
@@ -27,10 +34,7 @@
 </template>
 
 <script>
-import NavBar from '@/components/NavBar'
-
 export default {
-  components: { NavBar },
   data() {
     return {
       form: {
@@ -43,3 +47,9 @@ export default {
   }
 }
 </script>
+
+<style lang="scss" scoped>
+.lead {
+  color: var(--secondary);
+}
+</style>
