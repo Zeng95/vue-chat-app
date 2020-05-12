@@ -1,4 +1,6 @@
-# vue-chat
+# vue-chat-app
+
+![diagram](https://user-images.githubusercontent.com/12603244/81544509-39b35980-93aa-11ea-8744-2e1fcc9808a8.png)
 
 ## Project setup
 ```
