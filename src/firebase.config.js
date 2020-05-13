@@ -1,6 +1,8 @@
 // The core Firebase JS SDK is always required and must be listed first
 import * as firebase from 'firebase/app'
+
 import 'firebase/analytics'
+import 'firebase/auth'
 import 'firebase/firestore'
 
 // Your web app's Firebase configuration
@@ -18,6 +20,10 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig)
 firebase.analytics()
 
-const db = firebase.firestore()
+const database = firebase.firestore()
 
-export { db }
+// 第三方登录对象的实例
+const GoogleAuthProvider = new firebase.auth.GoogleAuthProvider()
+const GithubAuthProvider = new firebase.auth.GithubAuthProvider()
+
+export { database, GoogleAuthProvider, GithubAuthProvider }

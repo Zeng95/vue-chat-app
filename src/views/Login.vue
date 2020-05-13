@@ -1,12 +1,14 @@
 <template>
-  <div class="login">
+  <div class="login vh-100 d-flex flex-column justify-content-center">
     <b-jumbotron
-      class="text-center mb-0"
-      text-variant="primary"
-      bg-variant="transparent"
+      fluid
       header="Real-Time Chat"
+      header-level="4"
       lead="Powered by Vue.js & Firebase"
       lead-tag="h5"
+      text-variant="primary"
+      bg-variant="transparent"
+      class="text-center mb-0 pt-0 pb-5"
     />
 
     <b-container>
@@ -22,6 +24,7 @@
           >
             <template v-slot:header></template>
 
+            <!-- 第三方登录 -->
             <div class="additional">
               <!-- Twitter -->
               <b-button
@@ -29,6 +32,7 @@
                 size="lg"
                 class="position-relative border-0"
                 variant="transparent"
+                @click="loginWithTwitter"
               >
                 <img
                   class="logo position-absolute"
@@ -44,6 +48,7 @@
                 size="lg"
                 class="position-relative border-0"
                 variant="transparent"
+                @click="loginWithGoogle"
               >
                 <img
                   class="logo position-absolute"
@@ -53,24 +58,26 @@
                 <span>Continue with Google</span>
               </b-button>
 
-              <!-- Apple -->
+              <!-- Github -->
               <b-button
                 block
                 size="lg"
                 class="position-relative border-0"
                 variant="transparent"
+                @click="loginWithGithub"
               >
                 <img
                   class="logo position-absolute"
-                  :src="require('@/assets/images/apple_logo.svg')"
+                  :src="require('@/assets/images/github_logo.svg')"
                   alt="facebook"
                 />
-                <span>Continue with Apple</span>
+                <span>Continue with Github</span>
               </b-button>
 
               <span class="d-block">OR</span>
             </div>
 
+            <!-- 表单 -->
             <b-form autocomplete="off" @submit.prevent="login">
               <b-form-group
                 class="mb-4"
@@ -80,9 +87,10 @@
                   trim
                   size="lg"
                   ref="input"
+                  placeholder="Username"
+                  class="form-username"
                   :state="usernameState"
                   v-model="form.username"
-                  placeholder="Username"
                   @change="checkValidity"
                 ></b-form-input>
               </b-form-group>
@@ -101,7 +109,7 @@
                   class="mr-2"
                   label="Loading..."
                 />
-                Continue
+                Login
               </b-button>
             </b-form>
           </b-card>
@@ -113,6 +121,8 @@
 </template>
 
 <script>
+import { mapActions } from 'vuex'
+
 export default {
   computed: {
     usernameState() {
@@ -138,6 +148,7 @@ export default {
     }
   },
   methods: {
+    ...mapActions('auth', ['signInWithGoogle']),
     checkValidity() {
       if (!this.hasValidated) {
         this.hasValidated = true
@@ -148,6 +159,21 @@ export default {
         name: 'Chat',
         params: { username: this.form.username }
       })
+    },
+    loginWithTwitter() {
+      console.log('twitter')
+    },
+    async loginWithGoogle() {
+      try {
+        const result = await this.signInWithGoogle()
+
+        console.log(result)
+      } catch (error) {
+        console.log(error)
+      }
+    },
+    loginWithGithub() {
+      console.log('github')
     }
   }
 }
@@ -155,6 +181,7 @@ export default {
 
 <style lang="scss" scoped>
 .lead {
+  margin-bottom: 0;
   color: var(--secondary);
 }
 
@@ -162,6 +189,7 @@ export default {
   border-radius: 8px;
   box-shadow: 0 5px 5px 0 rgba(154, 160, 185, 0.05),
     0 5px 30px 0 rgba(166, 173, 201, 0.22);
+  font-family: AkkuratPro;
 
   .card-header {
     width: 100%;
@@ -180,8 +208,6 @@ export default {
     margin-bottom: 24px;
     color: #2b2d38;
     text-align: center;
-    letter-spacing: -0.2px;
-    font: normal 600 36px/54px AkkuratPro;
   }
 
   .additional {
@@ -190,11 +216,15 @@ export default {
       height: 45px;
       background: #f1f2fa;
       color: #60657b;
-      font-size: 15px;
+      font: 400 16px/24px AkkuratPro;
       transition: all 0.2s;
 
       &:hover {
         background: #f9fafd;
+      }
+
+      &:focus {
+        box-shadow: none;
       }
     }
 
@@ -216,6 +246,19 @@ export default {
       font-size: 11px;
       line-height: 16px;
     }
+  }
+
+  .form-username {
+    font: 400 16px/24px AkkuratPro;
+    letter-spacing: 0.2px;
+
+    &::placeholder {
+      color: #c6cbde;
+    }
+  }
+
+  ::v-deep.invalid-feedback {
+    font-size: 1rem;
   }
 }
 
