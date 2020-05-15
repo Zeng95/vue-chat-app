@@ -5,6 +5,8 @@ import 'firebase/analytics'
 import 'firebase/auth'
 import 'firebase/firestore'
 
+import store from '@/store'
+
 // Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: 'AIzaSyAtswh1tuPPdQI-38R0uPeFxl23vZQMYPE',
@@ -20,10 +22,18 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig)
 firebase.analytics()
 
+firebase.auth().onAuthStateChanged(user => {
+  if (user) {
+    // dispatch user
+    store.dispatch('user/fetchUser', user)
+  }
+})
+
 const database = firebase.firestore()
 
 // 第三方登录对象的实例
-const GoogleAuthProvider = new firebase.auth.GoogleAuthProvider()
-const GithubAuthProvider = new firebase.auth.GithubAuthProvider()
+const twitterProvider = new firebase.auth.TwitterAuthProvider()
+const googleAuthProvider = new firebase.auth.GoogleAuthProvider()
+const githubAuthProvider = new firebase.auth.GithubAuthProvider()
 
-export { database, GoogleAuthProvider, GithubAuthProvider }
+export { database, twitterProvider, googleAuthProvider, githubAuthProvider }

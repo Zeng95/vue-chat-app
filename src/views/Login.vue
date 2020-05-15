@@ -159,7 +159,11 @@ export default {
     }
   },
   methods: {
-    ...mapActions('auth', ['signInWithGoogle']),
+    ...mapActions('auth', [
+      'signInWithTwitter',
+      'signInWithGoogle',
+      'signInWithGithub'
+    ]),
     checkValidity() {
       if (!this.hasValidated) {
         this.hasValidated = true
@@ -168,8 +172,16 @@ export default {
     login() {
       this.navigateToChat(this.form.username)
     },
-    loginWithTwitter() {
-      console.log('twitter')
+    async loginWithTwitter() {
+      try {
+        const result = await this.signInWithTwitter()
+
+        this.navigateToChat(result.displayName)
+      } catch (error) {
+        this.showAlert = true
+        this.alertMessage = error.message
+        this.alertVariant = 'danger'
+      }
     },
     async loginWithGoogle() {
       try {
@@ -182,8 +194,16 @@ export default {
         this.alertVariant = 'danger'
       }
     },
-    loginWithGithub() {
-      console.log('github')
+    async loginWithGithub() {
+      try {
+        const result = await this.signInWithGithub()
+
+        this.navigateToChat(result.displayName)
+      } catch (error) {
+        this.showAlert = true
+        this.alertMessage = error.message
+        this.alertVariant = 'danger'
+      }
     },
     navigateToChat(username) {
       this.$router.push({

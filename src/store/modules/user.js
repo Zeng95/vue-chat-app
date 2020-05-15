@@ -15,6 +15,14 @@ const getters = {
 
 // actions
 const actions = {
+  fetchUser({ commit }, user) {
+    console.log(user)
+    commit('auth/AUTH_SUCCESS', null, { root: true })
+
+    commit('SET_NAME', user.displayName)
+    commit('SET_AVATAR', user.photoURL)
+  },
+
   createUser({ commit }, user) {
     return new Promise(resolve => {
       const usersRef = database.collection('users')
