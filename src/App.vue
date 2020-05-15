@@ -11,10 +11,6 @@
 @import '~bootstrap/scss/bootstrap.scss';
 @import '~bootstrap-vue/src/index.scss';
 
-html {
-  font-size: 0.875rem;
-}
-
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.5s;
@@ -23,5 +19,15 @@ html {
 .fade-enter,
 .fade-leave-to {
   opacity: 0;
+}
+
+html {
+  font-size: 0.875rem;
+}
+
+button {
+  &:focus {
+    outline: none;
+  }
 }
 </style>

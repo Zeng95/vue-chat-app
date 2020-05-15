@@ -5,10 +5,9 @@
       header="Real-Time Chat"
       header-level="4"
       lead="Powered by Vue.js & Firebase"
-      lead-tag="h5"
       text-variant="primary"
       bg-variant="transparent"
-      class="text-center mb-0 pt-0 pb-5"
+      class="text-center mb-0 pt-0 pb-4"
     />
 
     <b-container>
@@ -105,7 +104,7 @@
               >
                 <b-spinner
                   small
-                  v-if="loading"
+                  v-if="showLoading"
                   class="mr-2"
                   label="Loading..."
                 />
@@ -117,13 +116,21 @@
         <b-col lg="3"></b-col>
       </b-row>
     </b-container>
+
+    <TheAlert
+      :isShow="showAlert"
+      :message="alertMessage"
+      :variant="alertVariant"
+    />
   </div>
 </template>
 
 <script>
 import { mapActions } from 'vuex'
+import TheAlert from '@/components/TheAlert'
 
 export default {
+  components: { TheAlert },
   computed: {
     usernameState() {
       if (this.hasValidated) {
@@ -143,8 +150,12 @@ export default {
       form: {
         username: ''
       },
-      loading: false,
-      hasValidated: false
+      hasValidated: false,
+      showLoading: false,
+
+      showAlert: false,
+      alertMessage: '',
+      alertVariant: ''
     }
   },
   methods: {
@@ -155,10 +166,7 @@ export default {
       }
     },
     login() {
-      this.$router.push({
-        name: 'Chat',
-        params: { username: this.form.username }
-      })
+      this.navigateToChat(this.form.username)
     },
     loginWithTwitter() {
       console.log('twitter')
@@ -167,13 +175,21 @@ export default {
       try {
         const result = await this.signInWithGoogle()
 
-        console.log(result)
+        this.navigateToChat(result.displayName)
       } catch (error) {
-        console.log(error)
+        this.showAlert = true
+        this.alertMessage = error.message
+        this.alertVariant = 'danger'
       }
     },
     loginWithGithub() {
       console.log('github')
+    },
+    navigateToChat(username) {
+      this.$router.push({
+        name: 'Chat',
+        params: { username }
+      })
     }
   }
 }
@@ -249,8 +265,8 @@ export default {
   }
 
   .form-username {
-    font: 400 16px/24px AkkuratPro;
     letter-spacing: 0.2px;
+    font: 400 16px/24px AkkuratPro;
 
     &::placeholder {
       color: #c6cbde;

@@ -12,7 +12,12 @@
 
 <script>
 export default {
-  name: 'ChatNavBar'
+  name: 'ChatNavBar',
+  methods: {
+    logout() {
+      console.log(1)
+    }
+  }
 }
 </script>
 

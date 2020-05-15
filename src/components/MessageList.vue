@@ -10,7 +10,7 @@
       </p>
 
       <div
-        class="message rounded"
+        class="message rounded mb-3"
         v-for="message in messages"
         :key="message.id"
       >
@@ -50,7 +50,6 @@ export default {
   }
 
   .message {
-    margin-bottom: 15px;
     padding: 10px;
     border: 1px solid lightblue;
 

@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import auth from './modules/auth'
+import channel from './modules/channel'
 import user from './modules/user'
 
 Vue.use(Vuex)
@@ -26,6 +27,6 @@ export default new Vuex.Store({
   mutations,
   actions,
   getters,
-  modules: { auth, user },
+  modules: { auth, user, channel },
   strict: debug
 })

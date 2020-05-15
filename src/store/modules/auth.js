@@ -1,6 +1,6 @@
 import * as firebase from 'firebase/app'
 import 'firebase/auth'
-import { GoogleAuthProvider } from '@/firebase.config'
+import { database, GoogleAuthProvider } from '@/firebase.config'
 
 // initial state
 const state = () => ({})
@@ -17,16 +17,26 @@ const actions = {
         .auth()
         .signInWithPopup(GoogleAuthProvider)
         .then(result => {
-          // Dispatch root actions
-          dispatch('user/createUser', result.user, { root: true }).then(() => {
-            resolve(result)
-          })
+          const usersRef = database.collection('users')
+
+          usersRef
+            .doc(result.user.uid)
+            .get()
+            .then(docSnapshot => {
+              // If the user does not exist then create
+              if (!docSnapshot.exists) {
+                dispatch('user/createUser', result.user, {
+                  root: true
+                }).then(() => {
+                  resolve(result.user)
+                })
+              } else {
+                resolve(result.user)
+              }
+            })
         })
         .catch(error => {
-          // Handle Errors here.
-          const errorMessage = error.message
-
-          reject(errorMessage)
+          reject(error)
         })
     })
   }

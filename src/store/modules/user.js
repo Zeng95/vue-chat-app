@@ -1,12 +1,15 @@
+import { database } from '@/firebase.config'
+
 // initial state
 const state = () => ({
-  name: null
+  name: null,
+  avatar: null
 })
 
 // getters
 const getters = {
   currentUser: state => {
-    return state.name
+    return { name: state.name, avatar: state.avatar }
   }
 }
 
@@ -14,7 +17,17 @@ const getters = {
 const actions = {
   createUser({ commit }, user) {
     return new Promise(resolve => {
+      const usersRef = database.collection('users')
+
+      usersRef.doc(user.uid).set({
+        email: user.email,
+        avatar: user.photoURL,
+        name: user.displayName
+      })
+
       commit('SET_NAME', user.displayName)
+      commit('SET_AVATAR', user.photoURL)
+
       resolve()
     })
   }
@@ -24,6 +37,10 @@ const actions = {
 const mutations = {
   SET_NAME(state, name) {
     state.name = name
+  },
+
+  SET_AVATAR(state, avatar) {
+    state.avatar = avatar
   }
 }
 
