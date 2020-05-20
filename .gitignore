@@ -2,7 +2,8 @@
 node_modules
 /dist
 
-# local env files
+# dotenv environment variables file
+.env
 .env.local
 .env.*.local
 

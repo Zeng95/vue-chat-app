@@ -1,6 +1,6 @@
 import * as firebase from 'firebase/app'
-import 'firebase/auth'
 import {
+  auth,
   database,
   twitterProvider,
   googleAuthProvider,
@@ -9,118 +9,128 @@ import {
 
 // initial state
 const state = () => ({
-  loggedIn: false
+  authId: null
 })
 
 // getters
 const getters = {
-  loggedIn: state => {
-    return state.loggedIn
+  authId: state => {
+    return state.authId
   }
 }
 
 // actions
 const actions = {
-  // To sign in with a pop-up window.
+  initAuthentication({ dispatch }) {
+    return new Promise((resolve, reject) => {
+      auth.onAuthStateChanged(async result => {
+        if (result) {
+          // 如果 user 存在，说明用户已经处于登录状态
+          const userId = result.uid
+          const user = result.providerData[0]
+
+          try {
+            await dispatch('users/updateUser', { userId, user }, { root: true })
+            const result = await dispatch('fetchAuthUser')
+
+            resolve(result)
+          } catch (error) {
+            reject(error)
+          }
+        } else {
+          resolve(null)
+        }
+      })
+    })
+  },
+
+  fetchAuthUser({ dispatch, commit }) {
+    const userId = auth.currentUser.uid
+
+    return new Promise((resolve, reject) => {
+      dispatch('users/fetchUser', userId, { root: true })
+        .then(user => {
+          commit('SET_AUTH_USER', userId)
+          resolve(user)
+        })
+        .catch(error => reject(error))
+    })
+  },
+
+  // 使用 Email 登录
+  signInWithEmail() {},
+
+  // 使用 Twitter 账号登录
   signInWithTwitter({ dispatch }) {
-    return new Promise((resolve, reject) => {
-      firebase
-        .auth()
-        .signInWithPopup(twitterProvider)
-        .then(result => {
-          const usersRef = database.collection('users')
-
-          usersRef
-            .doc(result.user.uid)
-            .get()
-            .then(docSnapshot => {
-              // If the user does not exist then create
-              if (!docSnapshot.exists) {
-                dispatch('user/createUser', result.user, {
-                  root: true
-                }).then(() => {
-                  resolve(result.user)
-                })
-              } else {
-                resolve(result.user)
-              }
-            })
-        })
-        .catch(error => {
-          reject(error)
-        })
-    })
+    return dispatch('signInWithPopup', twitterProvider)
   },
 
+  // 使用 Google 账号登录
   signInWithGoogle({ dispatch }) {
-    return new Promise((resolve, reject) => {
-      firebase
-        .auth()
-        .signInWithPopup(googleAuthProvider)
-        .then(result => {
-          const usersRef = database.collection('users')
-
-          usersRef
-            .doc(result.user.uid)
-            .get()
-            .then(docSnapshot => {
-              // If the user does not exist then create
-              if (!docSnapshot.exists) {
-                dispatch('user/createUser', result.user, {
-                  root: true
-                }).then(() => {
-                  resolve(result.user)
-                })
-              } else {
-                resolve(result.user)
-              }
-            })
-        })
-        .catch(error => {
-          reject(error)
-        })
-    })
+    return dispatch('signInWithPopup', googleAuthProvider)
   },
 
+  // 使用 Github 账号登录
   signInWithGithub({ dispatch }) {
-    return new Promise((resolve, reject) => {
-      firebase
-        .auth()
-        .signInWithPopup(githubAuthProvider)
-        .then(result => {
-          const usersRef = database.collection('users')
+    return dispatch('signInWithPopup', githubAuthProvider)
+  },
 
-          usersRef
-            .doc(result.user.uid)
-            .get()
-            .then(docSnapshot => {
-              // If the user does not exist then create
-              if (!docSnapshot.exists) {
-                dispatch('user/createUser', result.user, {
-                  root: true
-                }).then(() => {
-                  resolve(result.user)
+  // 弹窗登录
+  signInWithPopup({ dispatch }, provider) {
+    return new Promise((resolve, reject) =>
+      auth
+        .setPersistence(firebase.auth.Auth.Persistence.SESSION)
+        .then(() =>
+          auth
+            .signInWithPopup(provider)
+            .then(result => {
+              const usersRef = database.collection('users')
+
+              const user = result.additionalUserInfo.profile
+              const userId = result.user.uid
+
+              usersRef
+                .doc(userId)
+                .get()
+                .then(doc => {
+                  if (!doc.exists) {
+                    // If the user does not exist then create
+                    dispatch(
+                      'users/createUser',
+                      { userId, user },
+                      { root: true }
+                    )
+                      .then(() => resolve())
+                      .catch(error => reject(error))
+                  } else {
+                    resolve()
+                  }
                 })
-              } else {
-                resolve(result.user)
-              }
             })
+            .catch(error => reject(error))
+        )
+        .catch(error => reject(error))
+    )
+  },
+
+  // 退出登录
+  logout({ commit }) {
+    return new Promise((resolve, reject) => {
+      auth
+        .signOut()
+        .then(() => {
+          commit('SET_AUTH_USER', null)
+          resolve()
         })
-        .catch(error => {
-          reject(error)
-        })
+        .catch(error => reject(error))
     })
   }
 }
 
 // mutations
 const mutations = {
-  AUTH_SUCCESS: state => {
-    state.loggedIn = true
-  },
-
-  AUTH_FAILURE: state => {
-    state.loggedIn = false
+  SET_AUTH_USER: (state, id) => {
+    state.authId = id
   }
 }
 

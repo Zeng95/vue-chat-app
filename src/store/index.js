@@ -1,14 +1,23 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
+
+// 全局属性
+import actions from './actions'
+import mutations from './mutations'
+
+// 模块
 import auth from './modules/auth'
-import channel from './modules/channel'
-import user from './modules/user'
+import users from './modules/users'
+import channels from './modules/channels'
+import messages from './modules/messages'
 
 Vue.use(Vuex)
 
 const debug = process.env.NODE_ENV !== 'production'
 
 export default new Vuex.Store({
-  modules: { auth, user, channel },
+  actions,
+  mutations,
+  modules: { auth, users, channels, messages },
   strict: debug
 })

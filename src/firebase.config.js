@@ -5,35 +5,32 @@ import 'firebase/analytics'
 import 'firebase/auth'
 import 'firebase/firestore'
 
-import store from '@/store'
-
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: 'AIzaSyAtswh1tuPPdQI-38R0uPeFxl23vZQMYPE',
-  authDomain: 'vue-chat-app-eff2f.firebaseapp.com',
-  databaseURL: 'https://vue-chat-app-eff2f.firebaseio.com',
-  projectId: 'vue-chat-app-eff2f',
-  storageBucket: 'vue-chat-app-eff2f.appspot.com',
-  messagingSenderId: '363993316599',
-  appId: '1:363993316599:web:e9912edb6f4436a55de7f2',
-  measurementId: 'G-W10DZFX17K'
+  apiKey: process.env.VUE_APP_FIREBASE_API_KEY,
+  authDomain: process.env.VUE_APP_FIREBASE_AUTH_DOMAIN,
+  databaseURL: process.env.VUE_APP_FIREBASE_DATABASE_URL,
+  projectId: process.env.VUE_APP_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.VUE_APP_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.VUE_APP_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.VUE_APP_FIREBASE_APP_ID,
+  measurementId: process.env.VUE_APP_FIREBASE_MEASUREMENT_ID
 }
+
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig)
 firebase.analytics()
 
-firebase.auth().onAuthStateChanged(user => {
-  if (user) {
-    // dispatch user
-    store.dispatch('user/fetchUser', user)
-  }
-})
-
+const auth = firebase.auth()
 const database = firebase.firestore()
-
-// 第三方登录对象的实例
 const twitterProvider = new firebase.auth.TwitterAuthProvider()
 const googleAuthProvider = new firebase.auth.GoogleAuthProvider()
 const githubAuthProvider = new firebase.auth.GithubAuthProvider()
 
-export { database, twitterProvider, googleAuthProvider, githubAuthProvider }
+export {
+  auth,
+  database,
+  twitterProvider,
+  googleAuthProvider,
+  githubAuthProvider
+}

@@ -4,37 +4,36 @@
 
     <hr />
 
-    <div class="message-group" v-chat-scroll="{ smooth: true }">
+    <div class="message-group" v-chat-scroll="{ always: false, smooth: true }">
       <p class="nomessages text-secondary" v-if="messages.length === 0">
         [No messages yet!]
       </p>
 
-      <div
-        class="message rounded mb-3"
+      <MessageItem
+        v-else
         v-for="message in messages"
         :key="message.id"
-      >
-        <small class="d-block text-right text-info">
-          @{{ message.username }}
-        </small>
-
-        <p class="mb-0">
-          {{ message.text }}
-        </p>
-
-        <small class="d-block text-right text-muted">{{ message.date }}</small>
-      </div>
+        :message="message"
+      />
     </div>
   </div>
 </template>
 
 <script>
+import { mapState } from 'vuex'
+import MessageItem from './MessageItem'
+
 export default {
   name: 'MessageList',
-  props: {
-    messages: {
-      type: Array,
-      required: true
+  components: { MessageItem },
+  computed: {
+    ...mapState({
+      messages: state => state.messages.items
+    })
+  },
+  watch: {
+    currentChannel(val) {
+      console.log(val)
     }
   }
 }
@@ -47,20 +46,6 @@ export default {
   .message-group {
     overflow-y: scroll;
     height: 65vh !important;
-  }
-
-  .message {
-    padding: 10px;
-    border: 1px solid lightblue;
-
-    .message-title {
-      display: inline;
-      font-size: 1rem;
-    }
-
-    .user-typing {
-      height: 1rem;
-    }
   }
 }
 </style>

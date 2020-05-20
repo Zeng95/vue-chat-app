@@ -5,7 +5,7 @@
       header="Real-Time Chat"
       header-level="4"
       lead="Powered by Vue.js & Firebase"
-      text-variant="primary"
+      text-variant="white"
       bg-variant="transparent"
       class="text-center mb-0 pt-0 pb-4"
     />
@@ -77,7 +77,7 @@
             </div>
 
             <!-- 表单 -->
-            <b-form autocomplete="off" @submit.prevent="login">
+            <b-form autocomplete="off" @submit.prevent="loginWithEmail">
               <b-form-group
                 class="mb-4"
                 invalid-feedback="Enter at least 1 character or more"
@@ -86,10 +86,10 @@
                   trim
                   size="lg"
                   ref="input"
-                  placeholder="Username"
+                  placeholder="Email"
                   class="form-username"
                   :state="usernameState"
-                  v-model="form.username"
+                  v-model="form.email"
                   @change="checkValidity"
                 ></b-form-input>
               </b-form-group>
@@ -99,7 +99,7 @@
                 size="lg"
                 type="submit"
                 variant="primary"
-                class="d-flex justify-content-center align-items-center"
+                class="btn-login d-flex justify-content-center align-items-center"
                 :disabled="isValid"
               >
                 <b-spinner
@@ -117,6 +117,16 @@
       </b-row>
     </b-container>
 
+    <b-toast id="login-toast" variant="info" solid no-auto-hide>
+      <template v-slot:toast-title>
+        <div class="d-flex flex-grow-1 align-items-baseline">
+          <strong class="mr-auto">Here's An Info!</strong>
+          <small class="text-muted mr-2">{{ date }}</small>
+        </div>
+      </template>
+      Processing...
+    </b-toast>
+
     <TheAlert
       :isShow="showAlert"
       :message="alertMessage"
@@ -127,6 +137,7 @@
 
 <script>
 import { mapActions } from 'vuex'
+import moment from 'moment'
 import TheAlert from '@/components/TheAlert'
 
 export default {
@@ -134,13 +145,13 @@ export default {
   computed: {
     usernameState() {
       if (this.hasValidated) {
-        return this.form.username.length > 0 ? true : false
+        return this.form.email.length > 0 ? true : false
       } else {
         return null
       }
     },
     isValid() {
-      const result = this.form.username.length > 0
+      const result = this.form.email.length > 0
 
       return result ? false : true
     }
@@ -148,14 +159,16 @@ export default {
   data() {
     return {
       form: {
-        username: ''
+        email: ''
       },
       hasValidated: false,
       showLoading: false,
 
       showAlert: false,
       alertMessage: '',
-      alertVariant: ''
+      alertVariant: '',
+
+      date: moment().format('DD MMMM, h:ss a')
     }
   },
   methods: {
@@ -169,14 +182,13 @@ export default {
         this.hasValidated = true
       }
     },
-    login() {
-      this.navigateToChat(this.form.username)
+    loginWithEmail() {
+      this.navigateToChat()
     },
     async loginWithTwitter() {
       try {
-        const result = await this.signInWithTwitter()
-
-        this.navigateToChat(result.displayName)
+        await this.signInWithTwitter()
+        this.navigateToChat()
       } catch (error) {
         this.showAlert = true
         this.alertMessage = error.message
@@ -185,40 +197,41 @@ export default {
     },
     async loginWithGoogle() {
       try {
-        const result = await this.signInWithGoogle()
-
-        this.navigateToChat(result.displayName)
+        this.$bvToast.show('login-toast')
+        await this.signInWithGoogle()
+        this.navigateToChat()
       } catch (error) {
         this.showAlert = true
         this.alertMessage = error.message
         this.alertVariant = 'danger'
+      } finally {
+        this.$bvToast.hide('login-toast')
       }
     },
     async loginWithGithub() {
       try {
-        const result = await this.signInWithGithub()
-
-        this.navigateToChat(result.displayName)
+        await this.signInWithGithub()
+        this.navigateToChat()
       } catch (error) {
         this.showAlert = true
         this.alertMessage = error.message
         this.alertVariant = 'danger'
       }
     },
-    navigateToChat(username) {
-      this.$router.push({
-        name: 'Chat',
-        params: { username }
-      })
+    navigateToChat() {
+      this.$router.push({ name: 'Chat' })
     }
   }
 }
 </script>
 
 <style lang="scss" scoped>
+.login {
+  background: url('../assets/images/login-background.svg') no-repeat center/100%;
+}
+
 .lead {
   margin-bottom: 0;
-  color: var(--secondary);
 }
 
 .card {
@@ -296,9 +309,11 @@ export default {
   ::v-deep.invalid-feedback {
     font-size: 1rem;
   }
-}
 
-.btn.disabled {
-  cursor: not-allowed;
+  .btn-login {
+    &.disabled {
+      cursor: not-allowed;
+    }
+  }
 }
 </style>

@@ -1,7 +1,7 @@
 <template>
   <transition name="fade">
     <b-alert
-      v-if="isShow"
+      v-if="visible"
       class="position-fixed d-flex align-items-center"
       :class="classObject"
       fade
@@ -33,7 +33,7 @@ export default {
     BIconXCircleFill
   },
   props: {
-    isShow: {
+    visible: {
       type: Boolean,
       default: false
     },
@@ -56,7 +56,7 @@ export default {
   },
   data() {
     return {
-      dismissSecs: 5,
+      dismissSecs: 10,
       dismissCountDown: 0
     }
   },
@@ -73,10 +73,8 @@ export default {
     }
   },
   watch: {
-    isShow(val) {
-      if (val) {
-        this.showAlert()
-      }
+    visible(val) {
+      if (val) this.showAlert()
     }
   }
 }
@@ -84,9 +82,10 @@ export default {
 
 <style lang="scss" scoped>
 .alert {
-  top: 20px;
+  top: 40px;
   left: 50%;
   z-index: 1000;
+  box-shadow: 0 5px 20px 0 rgba(0, 0, 0, 0.1);
   transform: translate3d(-50%, 0, 0);
 }
 
