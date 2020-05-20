@@ -20,7 +20,7 @@ const getters = {
 // actions
 const actions = {
   setCurrentChannel({ commit }, channel) {
-    commit('SET_ID', channel.id)
+    commit('SET_ID', channel._id)
     commit('SET_NAME', channel.name)
   },
 

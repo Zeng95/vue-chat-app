@@ -2,7 +2,6 @@ import { database } from '@/firebase.config'
 
 export default {
   fetchItem: ({ state, commit }, { resource, id }) => {
-    console.log(id)
     return new Promise((resolve, reject) => {
       database
         .collection(resource)

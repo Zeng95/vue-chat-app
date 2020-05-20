@@ -12,7 +12,7 @@
     <b-list-group class="mt-3">
       <b-list-group-item
         v-for="channel in channels"
-        :key="channel.id"
+        :key="channel._id"
         :active="getActiveChannel(channel)"
         @click="setCurrentChannel(channel)"
       >
@@ -93,7 +93,7 @@ export default {
     },
 
     getActiveChannel(channel) {
-      return channel.id === this.currentChannel.id
+      return channel._id === this.currentChannel.id
     }
   }
 }

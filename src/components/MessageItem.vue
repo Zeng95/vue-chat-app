@@ -28,7 +28,7 @@
 </template>
 
 <script>
-import { mapState, mapGetters } from 'vuex'
+import { mapState } from 'vuex'
 import moment from 'moment'
 
 export default {
@@ -40,8 +40,10 @@ export default {
     }
   },
   computed: {
-    ...mapState({ users: state => state.users.items }),
-    ...mapGetters('auth', ['authId']),
+    ...mapState({
+      authId: state => state.auth.authId,
+      users: state => state.users.items
+    }),
     date() {
       const milliseconds = this.message.timestamp.seconds * 1000
       return moment(milliseconds).format('D MMMM, h:mm a')

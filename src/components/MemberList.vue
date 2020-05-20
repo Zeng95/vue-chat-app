@@ -1,24 +1,31 @@
 <template>
   <div class="user-list">
     <h4>Members</h4>
+
     <hr />
+
+    <!-- Show the list of channels -->
+    <b-list-group class="mt-3">
+      <b-list-group-item v-for="user in users" :key="user._id">
+        <span>{{ user.name }}</span>
+      </b-list-group-item>
+    </b-list-group>
   </div>
 </template>
 
 <script>
-import { database } from '@/firebase.config'
-import { mapGetters } from 'vuex'
+import { mapState } from 'vuex'
 
 export default {
   name: 'MemberList',
-  data() {
-    return {
-      users: [],
-      usersRef: database.collection('users')
-    }
-  },
   computed: {
-    ...mapGetters('channels', ['currentChannel'])
+    ...mapState({
+      users: state => {
+        return Object.values(state.users.items).filter(
+          user => user._id !== state.auth.authId
+        )
+      }
+    })
   }
 }
 </script>

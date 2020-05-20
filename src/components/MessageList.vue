@@ -12,7 +12,7 @@
       <MessageItem
         v-else
         v-for="message in messages"
-        :key="message.id"
+        :key="message._id"
         :message="message"
       />
     </div>

@@ -35,7 +35,7 @@ const actions = {
           } else {
             const messages = doc.data().messages
             messages[docRef.id] = docRef.id
-            console.log(messages)
+
             await channelsRef.doc(rootState.channels.id).update({ messages })
           }
 
@@ -47,6 +47,29 @@ const actions = {
 
   fetchMessages({ dispatch }, { ids }) {
     return dispatch('fetchItems', { resource: 'messages', ids }, { root: true })
+  },
+
+  fetchAllMessages({ rootState, commit }) {
+    return new Promise(resolve => {
+      database.collection('messages').onSnapshot(snapshot => {
+        snapshot.docChanges().forEach(change => {
+          if (change.type == 'added') {
+            const doc = change.doc
+            const item = doc.data()
+
+            if (item.channelId === rootState.channels.id) {
+              commit(
+                'SET_ITEM',
+                { resource: 'messages', id: doc.id, item },
+                { root: true }
+              )
+            }
+          }
+        })
+
+        resolve()
+      })
+    })
   }
 }
 

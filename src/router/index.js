@@ -5,6 +5,8 @@ import 'nprogress/nprogress.css' // progress bar style
 
 import store from '@/store'
 
+NProgress.configure({ showSpinner: false })
+
 Vue.use(VueRouter)
 
 const routes = [
@@ -72,11 +74,6 @@ router.beforeEach((to, from, next) => {
       next()
     }
   })
-})
-
-router.afterEach(() => {
-  // finish progress bar
-  NProgress.done()
 })
 
 export default router

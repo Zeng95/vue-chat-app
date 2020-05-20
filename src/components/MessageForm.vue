@@ -81,7 +81,7 @@ export default {
     }
   },
   methods: {
-    ...mapActions('messages', ['createMessage']),
+    ...mapActions('messages', ['fetchAllMessages', 'createMessage']),
     async save() {
       try {
         this.hasValidated = true
@@ -93,6 +93,8 @@ export default {
           text: this.form.text,
           timestamp: window.firebase.firestore.FieldValue.serverTimestamp()
         })
+
+        await this.fetchAllMessages()
 
         this.alertShow = true
         this.alertMessage = 'Send successfully'
