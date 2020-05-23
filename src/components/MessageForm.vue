@@ -1,6 +1,6 @@
 <template>
   <div class="message-form">
-    <b-form autocomplete="off" @submit.prevent="save">
+    <b-form autocomplete="off" @submit.prevent="sendMessage">
       <div class="ld ld-ring ld-spin"></div>
 
       <b-alert variant="danger" />
@@ -37,7 +37,7 @@
       </b-form-group>
     </b-form>
 
-    <TheAlert
+    <AppAlert
       :visible="alertShow"
       :message="alertMessage"
       :variant="alertVariant"
@@ -49,12 +49,12 @@
 <script>
 import { mapGetters, mapActions } from 'vuex'
 import { BIconImageFill, BIconCursorFill } from 'bootstrap-vue'
-import TheAlert from '@/components/TheAlert'
+import AppAlert from '@/components/AppAlert'
 
 export default {
   name: 'MessageForm',
   components: {
-    TheAlert,
+    AppAlert,
     BIconImageFill,
     BIconCursorFill
   },
@@ -81,8 +81,8 @@ export default {
     }
   },
   methods: {
-    ...mapActions('messages', ['fetchAllMessages', 'createMessage']),
-    async save() {
+    ...mapActions('messages', ['fetchMessages', 'createMessage']),
+    async sendMessage() {
       try {
         this.hasValidated = true
 
@@ -91,10 +91,8 @@ export default {
 
         await this.createMessage({
           text: this.form.text,
-          timestamp: window.firebase.firestore.FieldValue.serverTimestamp()
+          timestamp: window.firebase.firestore.Timestamp.now()
         })
-
-        await this.fetchAllMessages()
 
         this.alertShow = true
         this.alertMessage = 'Send successfully'

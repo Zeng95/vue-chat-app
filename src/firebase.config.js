@@ -4,6 +4,7 @@ import * as firebase from 'firebase/app'
 import 'firebase/analytics'
 import 'firebase/auth'
 import 'firebase/firestore'
+import 'firebase/database'
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -22,15 +23,17 @@ firebase.initializeApp(firebaseConfig)
 firebase.analytics()
 
 const auth = firebase.auth()
-const database = firebase.firestore()
+const firestoreDB = firebase.firestore()
+const realtimeDB = firebase.database()
 const twitterProvider = new firebase.auth.TwitterAuthProvider()
 const googleAuthProvider = new firebase.auth.GoogleAuthProvider()
 const githubAuthProvider = new firebase.auth.GithubAuthProvider()
 
 export {
   auth,
-  database,
   twitterProvider,
   googleAuthProvider,
-  githubAuthProvider
+  githubAuthProvider,
+  realtimeDB,
+  firestoreDB
 }

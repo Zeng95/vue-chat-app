@@ -1,23 +1,16 @@
-import * as firebase from 'firebase/app'
 import {
   auth,
-  database,
   twitterProvider,
   googleAuthProvider,
-  githubAuthProvider
+  githubAuthProvider,
+  realtimeDB,
+  firestoreDB
 } from '@/firebase.config'
 
 // initial state
 const state = () => ({
   authId: null
 })
-
-// getters
-const getters = {
-  authId: state => {
-    return state.authId
-  }
-}
 
 // actions
 const actions = {
@@ -28,6 +21,8 @@ const actions = {
           // 如果 user 存在，说明用户已经处于登录状态
           const userId = result.uid
           const user = result.providerData[0]
+
+          dispatch('listenForConnection')
 
           try {
             await dispatch('users/updateUser', { userId, user }, { root: true })
@@ -45,9 +40,9 @@ const actions = {
   },
 
   fetchAuthUser({ dispatch, commit }) {
-    const userId = auth.currentUser.uid
-
     return new Promise((resolve, reject) => {
+      const userId = auth.currentUser.uid
+
       dispatch('users/fetchUser', userId, { root: true })
         .then(user => {
           commit('SET_AUTH_USER', userId)
@@ -77,40 +72,31 @@ const actions = {
 
   // 弹窗登录
   signInWithPopup({ dispatch }, provider) {
-    return new Promise((resolve, reject) =>
+    return new Promise((resolve, reject) => {
       auth
-        .setPersistence(firebase.auth.Auth.Persistence.SESSION)
-        .then(() =>
-          auth
-            .signInWithPopup(provider)
-            .then(result => {
-              const usersRef = database.collection('users')
+        .signInWithPopup(provider)
+        .then(result => {
+          const usersRef = firestoreDB.collection('users')
 
-              const user = result.additionalUserInfo.profile
-              const userId = result.user.uid
+          const user = result.user
+          const userId = result.user.uid
 
-              usersRef
-                .doc(userId)
-                .get()
-                .then(doc => {
-                  if (!doc.exists) {
-                    // If the user does not exist then create
-                    dispatch(
-                      'users/createUser',
-                      { userId, user },
-                      { root: true }
-                    )
-                      .then(() => resolve())
-                      .catch(error => reject(error))
-                  } else {
-                    resolve()
-                  }
-                })
+          usersRef
+            .doc(userId)
+            .get()
+            .then(doc => {
+              if (!doc.exists) {
+                // If the user does not exist then create
+                dispatch('users/createUser', { userId, user }, { root: true })
+                  .then(() => resolve())
+                  .catch(error => reject(error))
+              } else {
+                resolve()
+              }
             })
-            .catch(error => reject(error))
-        )
+        })
         .catch(error => reject(error))
-    )
+    })
   },
 
   // 退出登录
@@ -123,6 +109,56 @@ const actions = {
           resolve()
         })
         .catch(error => reject(error))
+    })
+  },
+
+  listenForConnection({ dispatch }) {
+    const connectedRef = realtimeDB.ref('.info/connected')
+
+    connectedRef.on('value', async () => {
+      await dispatch('disconnect')
+      await dispatch('setOnlineStatus')
+    })
+  },
+
+  setOnlineStatus() {
+    const userId = auth.currentUser.uid
+    const userStatusDatabaseRef = realtimeDB.ref(`/status/${userId}`)
+
+    const isOnlineForDatabase = {
+      state: 'online',
+      last_changed: window.firebase.database.ServerValue.TIMESTAMP
+    }
+
+    userStatusDatabaseRef.set(isOnlineForDatabase)
+  },
+
+  setOfflineStatus() {
+    const userId = auth.currentUser.uid
+    const userStatusDatabaseRef = realtimeDB.ref(`/status/${userId}`)
+
+    const isOfflineForDatabase = {
+      state: 'offline',
+      last_changed: window.firebase.database.ServerValue.TIMESTAMP
+    }
+
+    userStatusDatabaseRef.set(isOfflineForDatabase)
+  },
+
+  disconnect() {
+    return new Promise(resolve => {
+      const userId = auth.currentUser.uid
+      const userStatusDatabaseRef = realtimeDB.ref(`/status/${userId}`)
+
+      const isOfflineForDatabase = {
+        state: 'offline',
+        last_changed: window.firebase.database.ServerValue.TIMESTAMP
+      }
+
+      userStatusDatabaseRef
+        .onDisconnect()
+        .set(isOfflineForDatabase)
+        .then(() => resolve())
     })
   }
 }
@@ -137,7 +173,6 @@ const mutations = {
 export default {
   namespaced: true,
   state,
-  getters,
   actions,
   mutations
 }

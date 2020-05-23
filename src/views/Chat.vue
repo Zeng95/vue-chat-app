@@ -39,33 +39,11 @@ export default {
     MemberList
   },
   async beforeCreate() {
-    this.$store
-      .dispatch('channels/fetchChannels')
-      .then(channels => {
-        return Promise.all(
-          channels.map(channel => {
-            const messages = channel.messages || {}
+    await this.$store.dispatch('channels/fetchChannels')
+    await this.$store.dispatch('messages/fetchMessages')
+    await this.$store.dispatch('users/fetchUsers')
 
-            return this.$store.dispatch('messages/fetchMessages', {
-              ids: messages
-            })
-          })
-        )
-      })
-      .then(messagesArray => {
-        return Promise.all(
-          messagesArray.map(messages => {
-            const users = {}
-
-            messages.forEach(message => {
-              users[message.userId] = message.userId
-            })
-
-            return this.$store.dispatch('users/fetchUsers', { ids: users })
-          })
-        )
-      })
-      .then(() => this.asyncDataStatus_fetched())
+    this.asyncDataStatus_fetched()
   }
 }
 </script>

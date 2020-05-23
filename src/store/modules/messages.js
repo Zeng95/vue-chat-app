@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import { database } from '@/firebase.config'
+import { firestoreDB } from '@/firebase.config'
 
 // initial state
 const state = () => {
@@ -12,46 +12,22 @@ const state = () => {
 const actions = {
   createMessage({ rootState }, message) {
     return new Promise((resolve, reject) => {
-      const usersRef = database.collection('users')
-      const messagesRef = database.collection('messages')
-      const channelsRef = database.collection('channels')
+      const messagesRef = firestoreDB.collection('messages')
 
       message.userId = rootState.auth.authId
       message.channelId = rootState.channels.id
 
-      // 首先在 messages collection 中新增 message document。
-      // 然后根据自动生成的 messageId 分别在 channels 和 users collection 中创建 subcollection。
       // Add a new document with an auto-generated id.
       messagesRef
         .add(message)
-        .then(async docRef => {
-          const doc = await channelsRef.doc(rootState.channels.id).get()
-
-          if (!doc.data().messages) {
-            const messages = {}
-            messages[docRef.id] = docRef.id
-
-            await channelsRef.doc(rootState.channels.id).update({ messages })
-          } else {
-            const messages = doc.data().messages
-            messages[docRef.id] = docRef.id
-
-            await channelsRef.doc(rootState.channels.id).update({ messages })
-          }
-
-          resolve()
-        })
+        .then(() => resolve())
         .catch(error => reject(error))
     })
   },
 
-  fetchMessages({ dispatch }, { ids }) {
-    return dispatch('fetchItems', { resource: 'messages', ids }, { root: true })
-  },
-
-  fetchAllMessages({ rootState, commit }) {
+  fetchMessages({ rootState, commit }) {
     return new Promise(resolve => {
-      database.collection('messages').onSnapshot(snapshot => {
+      firestoreDB.collection('messages').onSnapshot(snapshot => {
         snapshot.docChanges().forEach(change => {
           if (change.type == 'added') {
             const doc = change.doc
@@ -70,11 +46,19 @@ const actions = {
         resolve()
       })
     })
+  },
+
+  clearMessagesLocally({ commit }) {
+    commit('SET_ITEMS', {})
   }
 }
 
 // mutations
-const mutations = {}
+const mutations = {
+  SET_ITEMS: (state, items) => {
+    state.items = items
+  }
+}
 
 export default {
   namespaced: true,

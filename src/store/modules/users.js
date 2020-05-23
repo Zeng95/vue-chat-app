@@ -1,4 +1,5 @@
-import { database } from '@/firebase.config'
+import Vue from 'vue'
+import { firestoreDB } from '@/firebase.config'
 
 // initial state
 const state = () => {
@@ -26,19 +27,19 @@ const getters = {
 const actions = {
   createUser({ commit }, { userId, user }) {
     return new Promise((resolve, reject) => {
-      const usersRef = database.collection('users')
+      const usersRef = firestoreDB.collection('users')
+
+      const username = user.displayName.split(' ')[0]
+      const name = user.displayName
+      const avatar = user.photoURL
 
       usersRef
         .doc(userId)
-        .set({
-          username: user.given_name,
-          name: user.name,
-          avatar: user.picture
-        })
+        .set({ username, name, avatar })
         .then(() => {
-          commit('SET_USERNAME', user.given_name)
-          commit('SET_NAME', user.name)
-          commit('SET_AVATAR', user.photoURL)
+          commit('SET_USERNAME', username)
+          commit('SET_NAME', name)
+          commit('SET_AVATAR', avatar)
 
           resolve()
         })
@@ -49,7 +50,7 @@ const actions = {
   // eslint-disable-next-line no-unused-vars
   updateUser({ state }, { userId, user }) {
     return new Promise((resolve, reject) => {
-      const usersRef = database.collection('users')
+      const usersRef = firestoreDB.collection('users')
 
       const username = user.displayName.split(' ')[0]
       const name = user.displayName
@@ -63,9 +64,13 @@ const actions = {
     })
   },
 
+  updateUserStatus({ commit }, { userId, status }) {
+    commit('SET_STATUS', { userId, status })
+  },
+
   fetchUser({ commit }, userId) {
     return new Promise((resolve, reject) => {
-      const usersRef = database.collection('users')
+      const usersRef = firestoreDB.collection('users')
 
       usersRef
         .doc(userId)
@@ -87,8 +92,25 @@ const actions = {
     })
   },
 
-  fetchUsers({ dispatch }, { ids }) {
-    return dispatch('fetchItems', { resource: 'users', ids }, { root: true })
+  fetchUsers({ commit }) {
+    return new Promise(resolve => {
+      firestoreDB.collection('users').onSnapshot(snapshot => {
+        snapshot.docChanges().forEach(change => {
+          if (change.type == 'added') {
+            const doc = change.doc
+            const item = doc.data()
+
+            commit(
+              'SET_ITEM',
+              { resource: 'users', id: doc.id, item },
+              { root: true }
+            )
+          }
+        })
+
+        resolve()
+      })
+    })
   }
 }
 
@@ -104,6 +126,10 @@ const mutations = {
 
   SET_AVATAR(state, avatar) {
     state.avatar = avatar
+  },
+
+  SET_STATUS(state, { userId, status }) {
+    Vue.set(state.items[userId], 'status', status)
   }
 }
 

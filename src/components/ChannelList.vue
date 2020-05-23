@@ -40,7 +40,7 @@
       </b-form>
     </b-modal>
 
-    <TheAlert
+    <AppAlert
       :visible="alertShow"
       :message="alertMessage"
       :variant="alertVariant"
@@ -52,11 +52,11 @@
 <script>
 import { mapState, mapGetters, mapActions } from 'vuex'
 import { BIconHash } from 'bootstrap-vue'
-import TheAlert from '@/components/TheAlert'
+import AppAlert from '@/components/AppAlert'
 
 export default {
   name: 'ChannelList',
-  components: { BIconHash, TheAlert },
+  components: { BIconHash, AppAlert },
   computed: {
     ...mapState({ channels: state => Object.values(state.channels.items) }),
     ...mapGetters('channels', ['currentChannel'])

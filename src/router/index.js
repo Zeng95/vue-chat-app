@@ -5,8 +5,6 @@ import 'nprogress/nprogress.css' // progress bar style
 
 import store from '@/store'
 
-NProgress.configure({ showSpinner: false })
-
 Vue.use(VueRouter)
 
 const routes = [
@@ -24,8 +22,10 @@ const routes = [
   {
     path: '/logout',
     name: 'Logout',
-    beforeEnter: (to, from, next) => {
-      store.dispatch('auth/logout').then(() => next({ name: 'Home' }))
+    beforeEnter: async (to, from, next) => {
+      await store.dispatch('auth/setOfflineStatus')
+      await store.dispatch('auth/logout')
+      next({ name: 'Home' })
     },
     meta: { requiresAuth: true }
   },
@@ -60,6 +60,7 @@ const router = new VueRouter({
 })
 
 router.beforeEach((to, from, next) => {
+  NProgress.configure({ showSpinner: false })
   NProgress.start()
 
   store.dispatch('auth/initAuthentication').then(user => {

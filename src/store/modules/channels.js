@@ -1,4 +1,4 @@
-import { database } from '@/firebase.config'
+import { firestoreDB } from '@/firebase.config'
 
 // initial state
 const state = () => {
@@ -26,7 +26,7 @@ const actions = {
 
   fetchChannels({ state, commit, dispatch }) {
     return new Promise(resolve => {
-      database.collection('channels').onSnapshot(snapshot => {
+      firestoreDB.collection('channels').onSnapshot(snapshot => {
         snapshot.docChanges().forEach(change => {
           if (change.type == 'added') {
             const doc = change.doc
@@ -53,7 +53,7 @@ const actions = {
   // eslint-disable-next-line no-unused-vars
   createChannel({ state }, channel) {
     return new Promise((resolve, reject) => {
-      database
+      firestoreDB
         .collection('channels')
         .add({ name: channel })
         .then(() => resolve())

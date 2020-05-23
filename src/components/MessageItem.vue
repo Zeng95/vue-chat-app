@@ -1,6 +1,8 @@
 <template>
   <div class="message">
-    <small class="mb-4 d-block text-center text-muted">{{ date }}</small>
+    <time class="small mb-4 d-block text-center text-muted" v-if="!isToday">
+      {{ date }}
+    </time>
 
     <b-media
       no-body
@@ -46,7 +48,13 @@ export default {
     }),
     date() {
       const milliseconds = this.message.timestamp.seconds * 1000
+
       return moment(milliseconds).format('D MMMM, h:mm a')
+    },
+    isToday() {
+      const today = moment().date()
+
+      return moment(this.message.timestamp.seconds * 1000).date() === today
     }
   }
 }
