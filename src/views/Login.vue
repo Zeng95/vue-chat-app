@@ -120,17 +120,18 @@
     <b-toast id="login-toast" variant="info" solid no-auto-hide>
       <template v-slot:toast-title>
         <div class="d-flex flex-grow-1 align-items-baseline">
-          <strong class="mr-auto">Here's An Info!</strong>
+          <strong class="mr-auto">Info</strong>
           <small class="text-muted mr-2">{{ date }}</small>
         </div>
       </template>
       Processing...
     </b-toast>
 
-    <TheAlert
-      :isShow="showAlert"
+    <AppAlert
+      :visible="alertShow"
       :message="alertMessage"
       :variant="alertVariant"
+      @hideAlert="alertShow = !alertShow"
     />
   </div>
 </template>
@@ -138,10 +139,10 @@
 <script>
 import { mapActions } from 'vuex'
 import moment from 'moment'
-import TheAlert from '@/components/TheAlert'
+import AppAlert from '@/components/AppAlert'
 
 export default {
-  components: { TheAlert },
+  components: { AppAlert },
   computed: {
     usernameState() {
       if (this.hasValidated) {
@@ -154,6 +155,9 @@ export default {
       const result = this.form.email.length > 0
 
       return result ? false : true
+    },
+    date() {
+      return moment().format('DD MMMM, h:mm a')
     }
   },
   data() {
@@ -164,11 +168,9 @@ export default {
       hasValidated: false,
       showLoading: false,
 
-      showAlert: false,
+      alertShow: false,
       alertMessage: '',
-      alertVariant: '',
-
-      date: moment().format('DD MMMM, h:ss a')
+      alertVariant: ''
     }
   },
   methods: {
@@ -187,10 +189,15 @@ export default {
     },
     async loginWithTwitter() {
       try {
+        this.$bvToast.show('login-toast')
         await this.signInWithTwitter()
+
+        this.$bvToast.hide('login-toast')
         this.navigateToChat()
       } catch (error) {
-        this.showAlert = true
+        this.$bvToast.hide('login-toast')
+
+        this.alertShow = true
         this.alertMessage = error.message
         this.alertVariant = 'danger'
       }
@@ -199,21 +206,28 @@ export default {
       try {
         this.$bvToast.show('login-toast')
         await this.signInWithGoogle()
+
+        this.$bvToast.hide('login-toast')
         this.navigateToChat()
       } catch (error) {
-        this.showAlert = true
+        this.$bvToast.hide('login-toast')
+
+        this.alertShow = true
         this.alertMessage = error.message
         this.alertVariant = 'danger'
-      } finally {
-        this.$bvToast.hide('login-toast')
       }
     },
     async loginWithGithub() {
       try {
+        this.$bvToast.show('login-toast')
         await this.signInWithGithub()
+
+        this.$bvToast.hide('login-toast')
         this.navigateToChat()
       } catch (error) {
-        this.showAlert = true
+        this.$bvToast.hide('login-toast')
+
+        this.alertShow = true
         this.alertMessage = error.message
         this.alertVariant = 'danger'
       }
@@ -221,6 +235,9 @@ export default {
     navigateToChat() {
       this.$router.push({ name: 'Chat' })
     }
+  },
+  beforeCreate() {
+    this.$emit('ready')
   }
 }
 </script>

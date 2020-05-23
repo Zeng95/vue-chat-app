@@ -1,19 +1,38 @@
 <template>
   <div id="app">
-    <transition name="fade" mode="out-in">
+    <transition name="fade" mode="out-in" v-show="showPage">
       <router-view @ready="pageReady" />
     </transition>
+
+    <AppSpinner v-show="!showPage" />
   </div>
 </template>
 
 <script>
-import NProgress from 'nprogress'
+import AppSpinner from '@/components/AppSpinner'
+import NProgress from 'nprogress' // progress bar
 
 export default {
+  name: 'App',
+  components: {
+    AppSpinner
+  },
+  data() {
+    return {
+      showPage: false
+    }
+  },
   methods: {
     pageReady() {
+      this.showPage = true
       NProgress.done()
     }
+  },
+  created() {
+    this.$router.beforeEach((to, from, next) => {
+      this.showPage = false
+      next()
+    })
   }
 }
 </script>
@@ -22,16 +41,6 @@ export default {
 @import '@/assets/scss/custom.scss';
 @import '~bootstrap/scss/bootstrap.scss';
 @import '~bootstrap-vue/src/index.scss';
-
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.5s;
-}
-
-.fade-enter,
-.fade-leave-to {
-  opacity: 0;
-}
 
 html {
   font-size: 0.875rem;
@@ -45,5 +54,19 @@ button {
   &:focus {
     outline: none;
   }
+}
+
+#nprogress .bar {
+  background: var(--primary) !important;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.5s;
+}
+
+.fade-enter,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>
