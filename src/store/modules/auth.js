@@ -53,7 +53,46 @@ const actions = {
   },
 
   // 使用 Email 登录
-  signInWithEmail() {},
+  // eslint-disable-next-line no-unused-vars
+  signInWithEmailAndPwd({ dispatch }, user) {
+    // eslint-disable-next-line no-unused-vars
+    return new Promise((resolve, reject) => {
+      auth
+        .signInWithEmailAndPassword(user.email, user.password)
+        .then(() => resolve())
+        .catch(error => {
+          if (error.code === 'auth/user-not-found') {
+            auth
+              .createUserWithEmailAndPassword(user.email, user.password)
+              .then(result => {
+                const usersRef = firestoreDB.collection('users')
+                const user = result.user
+                const userId = result.user.uid
+                usersRef
+                  .doc(userId)
+                  .get()
+                  .then(doc => {
+                    if (!doc.exists) {
+                      // If the user does not exist then create
+                      dispatch(
+                        'users/createUser',
+                        { userId, user },
+                        { root: true }
+                      )
+                        .then(() => resolve())
+                        .catch(error => reject(error))
+                    } else {
+                      resolve()
+                    }
+                  })
+              })
+              .catch(error => reject(error))
+          } else {
+            reject(error)
+          }
+        })
+    })
+  },
 
   // 使用 Twitter 账号登录
   signInWithTwitter({ dispatch }) {

@@ -21,64 +21,51 @@
       <!-- 第三方登录 -->
       <div class="additional">
         <!-- Twitter -->
-        <b-button
-          block
-          size="lg"
-          class="position-relative border-0"
-          variant="transparent"
-          @click="loginWithTwitter"
-        >
+        <b-button block class="btn-unstyled" @click="loginWithTwitter">
           <img
-            class="logo position-absolute"
+            class="logo"
             :src="require('@/assets/images/twitter_logo.svg')"
-            alt="facebook"
+            alt="twitter"
           />
           <span>Continue with Twitter</span>
         </b-button>
 
         <!-- Google -->
-        <b-button
-          block
-          size="lg"
-          class="position-relative border-0"
-          variant="transparent"
-          @click="loginWithGoogle"
-        >
+        <b-button block class="btn-unstyled" @click="loginWithGoogle">
           <img
-            class="logo position-absolute"
+            class="logo"
             :src="require('@/assets/images/google_logo.svg')"
-            alt="facebook"
+            alt="google"
           />
           <span>Continue with Google</span>
         </b-button>
 
         <!-- Github -->
-        <b-button
-          block
-          size="lg"
-          class="position-relative border-0"
-          variant="transparent"
-          @click="loginWithGithub"
-        >
+        <b-button block class="btn-unstyled" @click="loginWithGithub">
           <img
-            class="logo position-absolute"
+            class="logo"
             :src="require('@/assets/images/github_logo.svg')"
-            alt="facebook"
+            alt="github"
           />
           <span>Continue with Github</span>
         </b-button>
-
-        <span class="d-block">OR</span>
       </div>
 
+      <span class="or">OR</span>
+
       <!-- 表单 -->
-      <b-form autocomplete="off" @submit.stop.prevent="loginWithEmailAndPwd">
+      <b-form
+        novalidate
+        class="form"
+        autocomplete="off"
+        @submit.stop.prevent="loginWithEmailAndPwd"
+      >
         <b-form-group class="mb-4" invalid-feedback="Invalid email">
           <b-form-input
             trim
-            size="lg"
+            type="email"
+            class="email"
             placeholder="Email"
-            class="form-email"
             :state="validateState('email')"
             v-model="$v.form.email.$model"
           ></b-form-input>
@@ -86,14 +73,14 @@
 
         <b-form-group
           class="mb-4"
-          invalid-feedback="Invalid password"
+          invalid-feedback="At least 6 characters"
           v-if="inputPwdShow"
         >
           <b-form-input
             trim
-            size="lg"
+            type="password"
             placeholder="Password"
-            class="form-password"
+            class="password"
             :state="validateState('password')"
             v-model="$v.form.password.$model"
           ></b-form-input>
@@ -105,10 +92,11 @@
           type="submit"
           variant="primary"
           class="btn-login d-flex justify-content-center align-items-center"
-          :disabled="btnDisabled"
+          v-b-tooltip.hover
+          title="New account will be created and logged in automatically"
         >
-          <b-spinner small v-if="loadingShow" class="mr-2" label="Loading..." />
-          <span>{{ !inputPwdShow ? 'Continue' : 'Login' }}</span>
+          <b-spinner v-if="loadingShow" label="Loading..." />
+          <span v-else>{{ !inputPwdShow ? 'Continue' : 'Login' }}</span>
         </b-button>
       </b-form>
     </b-card>
@@ -134,7 +122,7 @@
 
 <script>
 import { mapActions } from 'vuex'
-import { email, required } from 'vuelidate/lib/validators'
+import { email, required, minLength } from 'vuelidate/lib/validators'
 import moment from 'moment'
 import AppAlert from '@/components/AppAlert'
 
@@ -156,19 +144,18 @@ export default {
 
       alertShow: false,
       alertMessage: '',
-      alertVariant: '',
-
-      btnDisabled: false
+      alertVariant: ''
     }
   },
   validations: {
     form: {
       email: {
-        email,
-        required
+        required,
+        email
       },
       password: {
-        required
+        required,
+        minLength: minLength(6)
       }
     }
   },
@@ -176,30 +163,51 @@ export default {
     ...mapActions('auth', [
       'signInWithTwitter',
       'signInWithGoogle',
-      'signInWithGithub'
+      'signInWithGithub',
+      'signInWithEmailAndPwd'
     ]),
     validateState(name) {
       const { $dirty, $error } = this.$v.form[name]
 
       return $dirty ? !$error : null
     },
-    loginWithEmailAndPwd() {
-      if (!this.$v.form.email.$error && !this.inputPwdShow) {
-        this.inputPwdShow = true
-        return false
+    // 邮箱和密码登录
+    async loginWithEmailAndPwd() {
+      try {
+        if (!this.$v.form.email.$invalid && !this.inputPwdShow) {
+          this.inputPwdShow = true
+          return false
+        }
+
+        this.$v.form.$touch()
+
+        if (this.$v.form.$anyError) {
+          return false
+        }
+
+        this.loadingShow = true
+        this.$bvToast.show('login-toast')
+
+        await this.signInWithEmailAndPwd({
+          email: this.form.email,
+          password: this.form.password
+        })
+
+        this.navigateToChat()
+      } catch (error) {
+        this.alertShow = true
+        this.alertMessage = error.message
+        this.alertVariant = 'danger'
+      } finally {
+        this.loadingShow = false
+        this.$bvToast.hide('login-toast')
       }
-
-      this.$v.form.$touch()
-
-      if (this.$v.form.$anyError) {
-        return false
-      }
-
-      this.navigateToChat()
     },
+    // Twitter 账户登录
     async loginWithTwitter() {
       try {
         this.$bvToast.show('login-toast')
+
         await this.signInWithTwitter()
 
         this.$bvToast.hide('login-toast')
@@ -212,6 +220,7 @@ export default {
         this.alertVariant = 'danger'
       }
     },
+    // Google 账户登录
     async loginWithGoogle() {
       try {
         this.$bvToast.show('login-toast')
@@ -227,6 +236,7 @@ export default {
         this.alertVariant = 'danger'
       }
     },
+    // Github 账户登录
     async loginWithGithub() {
       try {
         this.$bvToast.show('login-toast')
@@ -267,7 +277,6 @@ export default {
   border-radius: 8px;
   box-shadow: 0 5px 5px 0 rgba(154, 160, 185, 0.05),
     0 5px 30px 0 rgba(166, 173, 201, 0.22);
-  font-family: AkkuratPro;
 
   .card-header {
     width: 100%;
@@ -290,15 +299,16 @@ export default {
 
   .additional {
     .btn {
+      position: relative;
       margin-bottom: 10px;
-      height: 45px;
-      background: #f1f2fa;
+      height: 48px;
+      background: #f0f2fc;
       color: #60657b;
-      font: 400 16px/24px AkkuratPro;
+      font: inherit;
       transition: all 0.2s;
 
       &:hover {
-        background: #f9fafd;
+        background: #f9faff;
       }
 
       &:focus {
@@ -306,43 +316,69 @@ export default {
       }
     }
 
+    .btn-unstyled {
+      border: 0;
+    }
+
     .logo {
+      position: absolute;
       top: 50%;
       left: 15px;
       width: 16px;
       height: 16px;
       transform: translateY(-50%);
     }
-
-    > span {
-      margin: 12px 0;
-      color: #c6cbde;
-      text-align: center;
-      text-transform: uppercase;
-      letter-spacing: 0.9px;
-      font-weight: 700;
-      font-size: 11px;
-      line-height: 16px;
-    }
   }
 
-  .form-email,
-  .form-password {
-    letter-spacing: 0.2px;
-    font: 400 16px/24px AkkuratPro;
-
-    &::placeholder {
-      color: #c6cbde;
-    }
+  .or {
+    display: block;
+    margin: 16px 0;
+    color: #c6cbde;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.9px;
+    font-weight: 700;
+    font-size: 11px;
+    line-height: 16px;
   }
 
-  ::v-deep.invalid-feedback {
-    font-size: 1rem;
+  .form {
+    .email,
+    .password {
+      padding-top: 12px;
+      padding-bottom: 12px;
+      height: 48px;
+      border: 1px solid #e4e6f2;
+      letter-spacing: 0.2px;
+
+      &::placeholder {
+        color: #c6cbde;
+      }
+
+      &.is-invalid {
+        border-color: #dc3545;
+      }
+
+      &.is-valid {
+        border-color: #28a745;
+      }
+    }
+
+    ::v-deep.invalid-feedback {
+      font-size: 1rem;
+    }
   }
 
   .btn-login {
-    &.disabled {
-      cursor: not-allowed;
+    height: 50px;
+    border: 0;
+    font-size: 18px;
+    transition: all 0.2s;
+
+    .spinner-border {
+      width: 1.5rem;
+      height: 1.5rem;
+      border-width: 0.15em;
     }
   }
 }

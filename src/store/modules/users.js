@@ -22,15 +22,18 @@ const actions = {
     return new Promise((resolve, reject) => {
       const usersRef = firestoreDB.collection('users')
 
-      const username = user.displayName.split(' ')[0]
-      const name = user.displayName
-      const avatar = user.photoURL
+      const { displayName, email, photoURL } = user
+      const newUser = {
+        username: displayName ? displayName.split(' ')[0] : email,
+        name: displayName,
+        avatar: photoURL
+      }
 
       usersRef
         .doc(userId)
-        .set({ username, name, avatar })
+        .set(newUser)
         .then(() => {
-          commit('SET_CURRENT_USER', { username, name, avatar })
+          commit('SET_CURRENT_USER', newUser)
           resolve()
         })
         .catch(error => reject(error))
@@ -42,13 +45,16 @@ const actions = {
     return new Promise((resolve, reject) => {
       const usersRef = firestoreDB.collection('users')
 
-      const username = user.displayName.split(' ')[0]
-      const name = user.displayName
-      const avatar = user.photoURL
+      const { displayName, email, photoURL } = user
+      const newUser = {
+        username: displayName ? displayName.split(' ')[0] : email,
+        name: displayName,
+        avatar: photoURL
+      }
 
       usersRef
         .doc(userId)
-        .update({ username, name, avatar })
+        .update(newUser)
         .then(() => resolve())
         .catch(error => reject(error))
     })
