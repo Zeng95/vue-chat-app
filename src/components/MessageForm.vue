@@ -1,10 +1,6 @@
 <template>
   <div class="message-form">
     <b-form autocomplete="off" @submit.prevent="sendMessage">
-      <div class="ld ld-ring ld-spin"></div>
-
-      <b-alert variant="danger" />
-
       <b-form-group
         :label="`@${currentUser.username}`"
         tooltip
@@ -28,14 +24,20 @@
             <b-btn type="submit" variant="primary" title="send message">
               <b-icon-cursor-fill />
             </b-btn>
-            <b-btn class="text-white" variant="warning" title="upload photo">
+            <b-btn
+              v-b-modal.modal-upload
+              class="text-white"
+              variant="warning"
+              title="upload photo"
+            >
               <b-icon-image-fill />
             </b-btn>
-            <b-form-file v-model="form.file" plain hidden></b-form-file>
           </b-input-group-append>
         </b-input-group>
       </b-form-group>
     </b-form>
+
+    <MessageModalUpload />
 
     <AppAlert
       :visible="alertShow"
@@ -50,11 +52,13 @@
 import { mapGetters, mapActions } from 'vuex'
 import { BIconImageFill, BIconCursorFill } from 'bootstrap-vue'
 import AppAlert from '@/components/AppAlert'
+import MessageModalUpload from '@/components/MessageModalUpload'
 
 export default {
   name: 'MessageForm',
   components: {
     AppAlert,
+    MessageModalUpload,
     BIconImageFill,
     BIconCursorFill
   },
@@ -72,7 +76,7 @@ export default {
   },
   data() {
     return {
-      form: { text: '', file: null },
+      form: { text: '' },
       hasValidated: false,
 
       alertShow: false,

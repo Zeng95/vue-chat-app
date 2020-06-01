@@ -3,25 +3,31 @@ import { firestoreDB } from '@/firebase.config'
 // initial state
 const state = () => {
   return {
-    id: null,
-    name: null,
-
-    items: {}
+    items: {},
+    activeItem: { id: null, name: null }
   }
 }
 
 // getters
 const getters = {
-  currentChannel: state => {
-    return { id: state.id, name: state.name }
-  }
+  currentChannel: state => state.activeItem
 }
 
 // actions
 const actions = {
   setCurrentChannel({ commit }, channel) {
-    commit('SET_ID', channel._id)
-    commit('SET_NAME', channel.name)
+    commit('SET_CURRENT_CHANNEL', { id: channel._id, name: channel.name })
+  },
+
+  // eslint-disable-next-line no-unused-vars
+  createChannel({ state }, channel) {
+    return new Promise((resolve, reject) => {
+      firestoreDB
+        .collection('channels')
+        .add({ name: channel })
+        .then(() => resolve())
+        .catch(error => reject(error))
+    })
   },
 
   fetchChannels({ state, commit, dispatch }) {
@@ -45,31 +51,16 @@ const actions = {
 
         dispatch('setCurrentChannel', channelsArray[0])
 
-        resolve(channelsArray)
+        resolve()
       })
-    })
-  },
-
-  // eslint-disable-next-line no-unused-vars
-  createChannel({ state }, channel) {
-    return new Promise((resolve, reject) => {
-      firestoreDB
-        .collection('channels')
-        .add({ name: channel })
-        .then(() => resolve())
-        .catch(error => reject(error))
     })
   }
 }
 
 // mutations
 const mutations = {
-  SET_ID(state, id) {
-    state.id = id
-  },
-
-  SET_NAME(state, name) {
-    state.name = name
+  SET_CURRENT_CHANNEL(state, channel) {
+    state.activeItem = channel
   }
 }
 

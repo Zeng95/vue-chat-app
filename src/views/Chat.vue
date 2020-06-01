@@ -2,21 +2,34 @@
   <div v-if="asyncDataStatus_ready" class="vh-100">
     <ChatNavBar />
 
-    <b-container fluid>
-      <b-row>
-        <b-col cols="3" xl="2">
-          <ChannelList />
+    <div>
+      <b-sidebar
+        visible
+        no-header
+        no-header-close
+        width="260px"
+        sidebar-class="sidebar"
+        bg-variant="blue"
+      >
+        <MemberList />
 
-          <MemberList />
-        </b-col>
+        <ChannelList />
+      </b-sidebar>
 
-        <b-col cols="9" xl="10">
-          <MessageList />
+      <div role="main" class="primary-view-contents ml-auto">
+        <b-jumbotron
+          header="BootstrapVue"
+          lead="Bootstrap v4 Components for Vue.js 2"
+        >
+          <p>For more information visit website</p>
+          <b-button variant="primary" href="#">More Info</b-button>
+        </b-jumbotron>
 
-          <MessageForm />
-        </b-col>
-      </b-row>
-    </b-container>
+        <MessageList />
+
+        <MessageForm />
+      </div>
+    </div>
   </div>
 </template>
 
@@ -47,3 +60,15 @@ export default {
   }
 }
 </script>
+
+<style lang="scss">
+.sidebar {
+  top: auto;
+  bottom: 0;
+  height: calc(100% - 63px) !important;
+}
+
+.primary-view-contents {
+  width: calc(100% - 260px);
+}
+</style>

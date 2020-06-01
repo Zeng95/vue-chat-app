@@ -1,5 +1,5 @@
 <template>
-  <b-navbar class="mb-3" toggleable="md" type="dark" variant="primary">
+  <b-navbar toggleable="md" type="dark" variant="primary">
     <b-navbar-brand tag="h1" class="m-0 py-0 d-flex align-items-center">
       <b-img src="../assets/images/logo.png" alt="logo" class="logo" />
       <span class="ml-2">Real-Time Chat</span>

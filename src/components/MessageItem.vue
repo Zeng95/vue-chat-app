@@ -1,31 +1,81 @@
 <template>
-  <div class="message">
-    <time class="small mb-4 d-block text-center text-muted" v-if="!isToday">
-      {{ date }}
-    </time>
-
-    <b-media
-      no-body
-      :class="{ 'justify-content-end': message.userId === authId }"
-    >
-      <b-media-aside v-if="message.userId !== authId" vertical-align="bottom">
-        <b-avatar
-          badge
-          badge-variant="success"
-          size="26"
-          :src="users[message.userId].avatar"
-        />
+  <div class="message px-4 py-2">
+    <b-media no-body>
+      <b-media-aside class="mr-2" vertical-align="center">
+        <a href="#" class="avatar" @click="showModal">
+          <b-avatar rounded="sm" :src="users[message.userId].avatar" />
+        </a>
       </b-media-aside>
 
-      <b-media-body
-        class="d-inline-block rounded-pill border"
-        :class="{ me: message.userId === authId }"
-      >
-        <p class="mb-0">
-          {{ message.text }}
-        </p>
+      <b-media-body class="text-muted">
+        <!-- 发送人 -->
+        <a href="#" class="sender mr-2" @click="showModal">
+          <span>{{ users[message.userId].name }}</span>
+        </a>
+
+        <!-- 时间 -->
+        <a
+          href="#"
+          v-b-tooltip.hover
+          class="timestamp text-reset"
+          :title="`Today at ${timeWithSeconds}`"
+        >
+          <time>{{ timeWithoutSeconds }}</time>
+        </a>
+
+        <!-- 内容 -->
+        <p class="mb-0">{{ message.text }}</p>
       </b-media-body>
     </b-media>
+
+    <b-modal
+      lazy
+      static
+      centered
+      v-model="modalShow"
+      hide-backdrop
+      hide-header
+      hide-footer
+      size="sm"
+      dialog-class=""
+      content-class="border-0"
+      body-class="p-0"
+    >
+      <b-card
+        img-top
+        img-height="260"
+        :img-src="users[message.userId].avatar"
+        img-alt="Profile photo"
+        body-class="p-0"
+        class="member-profile-card w-100 border-0"
+      >
+        <div class="name p-3">
+          <a href="#">
+            <span>{{ users[message.userId].name }}</span>
+          </a>
+        </div>
+
+        <a class="full-profile-link d-block" href="#">View full profile</a>
+
+        <div class="field">
+          <div class="label">Local time</div>
+          <div class="value">{{ now }}</div>
+        </div>
+
+        <div class="buttons d-flex px-3 pb-3">
+          <b-button
+            variant="outline-secondary"
+            class="w-50"
+            @click="changeChannel"
+          >
+            Message
+          </b-button>
+          <b-button variant="outline-secondary" class="w-50 ml-3">
+            Call
+          </b-button>
+        </div>
+      </b-card>
+    </b-modal>
   </div>
 </template>
 
@@ -41,46 +91,60 @@ export default {
       required: true
     }
   },
+  data() {
+    return {
+      modalShow: false,
+
+      now: '',
+      milliseconds: this.message.timestamp.seconds * 1000
+    }
+  },
   computed: {
     ...mapState({
       authId: state => state.auth.authId,
       users: state => state.users.items
     }),
-    date() {
-      const milliseconds = this.message.timestamp.seconds * 1000
-
-      return moment(milliseconds).format('D MMMM, h:mm a')
+    timeWithSeconds() {
+      return moment(this.milliseconds).format('LTS')
     },
-    isToday() {
-      const today = moment().date()
-
-      return moment(this.message.timestamp.seconds * 1000).date() === today
+    timeWithoutSeconds() {
+      return moment(this.milliseconds).format('LT')
     }
+  },
+  methods: {
+    showModal() {
+      this.modalShow = true
+    },
+    showCurrentTime() {
+      this.now = moment().format('LT')
+    },
+    changeChannel() {
+      console.log(1)
+    },
+    getChannelId() {}
+  },
+  mounted() {
+    this.timer = setInterval(this.showCurrentTime, 1000)
+  },
+  beforeDestroy() {
+    clearInterval(this.timer)
   }
 }
 </script>
 
 <style lang="scss" scoped>
 .message {
-  &:not(:first-of-type) {
-    margin-top: 1.5rem;
+  &:hover {
+    background-color: var(--light);
   }
 
-  .media-body {
-    flex: none;
-    margin-left: 1rem;
-    padding: 0.75rem 1rem;
-
-    &.me {
-      margin-right: 1rem;
-      margin-left: 0;
-      border: 0 !important;
-      background-color: #f5f5f5;
-    }
+  .sender {
+    color: rgb(29, 28, 29);
+    font-weight: 900;
   }
 
-  .user-typing {
-    height: 1rem;
+  .timestamp {
+    font-size: 12px;
   }
 }
 </style>

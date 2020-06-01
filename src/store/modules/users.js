@@ -4,22 +4,15 @@ import { firestoreDB } from '@/firebase.config'
 // initial state
 const state = () => {
   return {
-    name: null,
-    username: null,
-    avatar: null,
-
-    items: {}
+    items: {},
+    activeItem: { username: null, name: null, avatar: null }
   }
 }
 
 // getters
 const getters = {
   currentUser: state => {
-    return {
-      username: state.username,
-      name: state.name,
-      avatar: state.avatar
-    }
+    return state.activeItem
   }
 }
 
@@ -37,10 +30,7 @@ const actions = {
         .doc(userId)
         .set({ username, name, avatar })
         .then(() => {
-          commit('SET_USERNAME', username)
-          commit('SET_NAME', name)
-          commit('SET_AVATAR', avatar)
-
+          commit('SET_CURRENT_USER', { username, name, avatar })
           resolve()
         })
         .catch(error => reject(error))
@@ -77,13 +67,8 @@ const actions = {
         .get()
         .then(doc => {
           if (doc.exists) {
-            const user = doc.data()
-
-            commit('SET_NAME', user.name)
-            commit('SET_USERNAME', user.username)
-            commit('SET_AVATAR', user.avatar)
-
-            resolve(user)
+            commit('SET_CURRENT_USER', doc.data())
+            resolve()
           } else {
             resolve(null)
           }
@@ -116,16 +101,10 @@ const actions = {
 
 // mutations
 const mutations = {
-  SET_USERNAME(state, username) {
-    state.username = username
-  },
-
-  SET_NAME(state, name) {
-    state.name = name
-  },
-
-  SET_AVATAR(state, avatar) {
-    state.avatar = avatar
+  SET_CURRENT_USER(state, user) {
+    state.activeItem.username = user.username
+    state.activeItem.name = user.name
+    state.activeItem.avatar = user.avatar
   },
 
   SET_STATUS(state, { userId, status }) {

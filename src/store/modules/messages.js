@@ -30,13 +30,13 @@ const actions = {
       firestoreDB.collection('messages').onSnapshot(snapshot => {
         snapshot.docChanges().forEach(change => {
           if (change.type == 'added') {
-            const doc = change.doc
-            const item = doc.data()
+            const message = change.doc.data()
+            const currentChannelId = rootState.channels.activeItem.id
 
-            if (item.channelId === rootState.channels.id) {
+            if (message.channelId === currentChannelId) {
               commit(
                 'SET_ITEM',
-                { resource: 'messages', id: doc.id, item },
+                { resource: 'messages', id: change.doc.id, item: message },
                 { root: true }
               )
             }

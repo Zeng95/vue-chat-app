@@ -19,16 +19,16 @@ const actions = {
       auth.onAuthStateChanged(async result => {
         if (result) {
           // 如果 user 存在，说明用户已经处于登录状态
-          const userId = result.uid
           const user = result.providerData[0]
+          const userId = result.uid
 
           dispatch('listenForConnection')
 
           try {
             await dispatch('users/updateUser', { userId, user }, { root: true })
-            const result = await dispatch('fetchAuthUser')
+            await dispatch('fetchAuthUser')
 
-            resolve(result)
+            resolve(true)
           } catch (error) {
             reject(error)
           }
@@ -44,9 +44,9 @@ const actions = {
       const userId = auth.currentUser.uid
 
       dispatch('users/fetchUser', userId, { root: true })
-        .then(user => {
+        .then(() => {
           commit('SET_AUTH_USER', userId)
-          resolve(user)
+          resolve()
         })
         .catch(error => reject(error))
     })

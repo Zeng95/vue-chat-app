@@ -12,7 +12,9 @@
         class="d-flex justify-content-between align-items-center"
       >
         <b-avatar :src="user.avatar" v-if="showUserAvater"></b-avatar>
-        <span>{{ user.name }}</span>
+        <a href="#">
+          <span>{{ user.name }}</span>
+        </a>
         <b-badge :variant="statusColor(user.status)" pill>
           {{ user.status }}
         </b-badge>

@@ -39,11 +39,14 @@ export default {
 
 <style lang="scss">
 @import '@/assets/scss/custom.scss';
+@import '@/assets/scss/modal.scss';
 @import '~bootstrap/scss/bootstrap.scss';
 @import '~bootstrap-vue/src/index.scss';
 
 html {
   font-size: 0.875rem;
+
+  -webkit-font-smoothing: antialiased;
 }
 
 ::-webkit-scrollbar {

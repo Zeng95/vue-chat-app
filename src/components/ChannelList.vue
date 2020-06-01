@@ -1,31 +1,55 @@
 <template>
   <div class="channel-list mb-5">
-    <h4>Channels</h4>
-
-    <hr />
-
-    <b-button variant="outline-primary" @click="modalShow = !modalShow">
-      Add Channel
-    </b-button>
-
-    <!-- Show the list of channels -->
-    <b-list-group class="mt-3">
-      <b-list-group-item
-        v-for="channel in channels"
-        :key="channel._id"
-        :active="getActiveChannel(channel)"
-        @click="setCurrentChannel(channel)"
+    <b-navbar toggleable type="dark" variant="blue" class="px-0">
+      <!-- Toggle -->
+      <b-navbar-toggle
+        target="collapse-channels"
+        class="d-flex align-items-center p-0 pl-3 border-0"
       >
-        <b-icon-hash />
-        <span>{{ channel.name }}</span>
-      </b-list-group-item>
-    </b-list-group>
+        <template v-slot:default="{ expanded }">
+          <span class="icon-caret" :class="{ 'icon-caret-down': expanded }">
+            <b-icon-caret-right-fill />
+          </span>
+          <span class="ml-1">Channels</span>
+        </template>
+      </b-navbar-toggle>
+
+      <!-- Plus icon -->
+      <b-button
+        v-b-tooltip="{
+          title: 'Add channels',
+          trigger: 'hover',
+          boundary: 'viewport'
+        }"
+        variant="transparent"
+        class="icon-plus p-1 mr-3 border-0"
+        @click="modalShow = !modalShow"
+      >
+        <b-icon-plus class="w-100 h-100" />
+      </b-button>
+
+      <!-- Collapse -->
+      <b-collapse id="collapse-channels" is-nav>
+        <b-navbar-nav>
+          <b-nav-item
+            link-classes="d-flex px-3"
+            v-for="channel in channels"
+            :key="channel._id"
+            :active="getActiveChannel(channel)"
+            @click.stop="setCurrentChannel(channel)"
+          >
+            <span class="icon-hash"><b-icon-hash /></span>
+            <span>{{ channel.name }}</span>
+          </b-nav-item>
+        </b-navbar-nav>
+      </b-collapse>
+    </b-navbar>
 
     <b-modal
       centered
       v-model="modalShow"
-      title="BootstrapVue"
-      cancel-variant="outline-secondary"
+      title="Modal Title"
+      ok-title="Add"
       @ok="addChannel"
     >
       <b-form class="form">
@@ -51,12 +75,12 @@
 
 <script>
 import { mapState, mapGetters, mapActions } from 'vuex'
-import { BIconHash } from 'bootstrap-vue'
+import { BIconHash, BIconPlus, BIconCaretRightFill } from 'bootstrap-vue'
 import AppAlert from '@/components/AppAlert'
 
 export default {
   name: 'ChannelList',
-  components: { BIconHash, AppAlert },
+  components: { BIconHash, BIconPlus, BIconCaretRightFill, AppAlert },
   computed: {
     ...mapState({ channels: state => Object.values(state.channels.items) }),
     ...mapGetters('channels', ['currentChannel'])
@@ -64,7 +88,6 @@ export default {
   data() {
     return {
       newChannel: '',
-
       modalShow: false,
 
       alertShow: false,
@@ -74,7 +97,6 @@ export default {
   },
   methods: {
     ...mapActions('channels', ['setCurrentChannel', 'createChannel']),
-
     async addChannel() {
       try {
         await this.createChannel(this.newChannel)
@@ -91,7 +113,6 @@ export default {
         this.newChannel = ''
       }
     },
-
     getActiveChannel(channel) {
       return channel._id === this.currentChannel.id
     }
@@ -100,12 +121,54 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.list-group {
-  overflow-y: scroll;
-  height: 216px;
+.channel-list {
+  .navbar-toggler {
+    font-size: 1rem;
+  }
 
-  .list-group-item {
-    transition: all 0.2s;
+  .nav-link {
+    &:hover,
+    &:focus {
+      background-color: var(--primary);
+    }
+
+    &.active {
+      background-color: #3f0e40;
+    }
+  }
+
+  .icon-caret {
+    margin-left: -7px;
+    width: 26px;
+    height: 26px;
+    line-height: 26px;
+    transition: transform 0.1s;
+    transform: translateY(-1px);
+
+    &.icon-caret-down {
+      transform: rotate(90deg) translateX(-1px);
+    }
+
+    .b-icon {
+      font-size: 12px;
+    }
+  }
+
+  .icon-plus {
+    box-sizing: content-box;
+    width: 24px;
+    height: 24px;
+    color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+  }
+
+  .icon-hash {
+    width: 20px;
+    height: 20px;
   }
 }
 </style>

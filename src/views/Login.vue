@@ -1,7 +1,6 @@
 <template>
   <div class="login vh-100 d-flex flex-column justify-content-center">
     <b-jumbotron
-      fluid
       header="Real-Time Chat"
       header-level="4"
       lead="Powered by Vue.js & Firebase"
@@ -10,112 +9,109 @@
       class="text-center mb-0 pt-0 pb-4"
     />
 
-    <b-container>
-      <b-row>
-        <b-col lg="3"></b-col>
-        <b-col lg="6">
-          <b-card
-            class="border-0"
-            title="Welcome back"
-            title-tag="h2"
-            header-class="p-0 border-0 bg-transparent"
-            body-class="px-5"
-          >
-            <template v-slot:header></template>
+    <b-card
+      class="border-0 mx-auto"
+      title="Welcome back"
+      title-tag="h2"
+      header-class="p-0 border-0 bg-transparent"
+      body-class="px-5"
+    >
+      <template v-slot:header></template>
 
-            <!-- 第三方登录 -->
-            <div class="additional">
-              <!-- Twitter -->
-              <b-button
-                block
-                size="lg"
-                class="position-relative border-0"
-                variant="transparent"
-                @click="loginWithTwitter"
-              >
-                <img
-                  class="logo position-absolute"
-                  :src="require('@/assets/images/twitter_logo.svg')"
-                  alt="facebook"
-                />
-                <span>Continue with Twitter</span>
-              </b-button>
+      <!-- 第三方登录 -->
+      <div class="additional">
+        <!-- Twitter -->
+        <b-button
+          block
+          size="lg"
+          class="position-relative border-0"
+          variant="transparent"
+          @click="loginWithTwitter"
+        >
+          <img
+            class="logo position-absolute"
+            :src="require('@/assets/images/twitter_logo.svg')"
+            alt="facebook"
+          />
+          <span>Continue with Twitter</span>
+        </b-button>
 
-              <!-- Google -->
-              <b-button
-                block
-                size="lg"
-                class="position-relative border-0"
-                variant="transparent"
-                @click="loginWithGoogle"
-              >
-                <img
-                  class="logo position-absolute"
-                  :src="require('@/assets/images/google_logo.svg')"
-                  alt="facebook"
-                />
-                <span>Continue with Google</span>
-              </b-button>
+        <!-- Google -->
+        <b-button
+          block
+          size="lg"
+          class="position-relative border-0"
+          variant="transparent"
+          @click="loginWithGoogle"
+        >
+          <img
+            class="logo position-absolute"
+            :src="require('@/assets/images/google_logo.svg')"
+            alt="facebook"
+          />
+          <span>Continue with Google</span>
+        </b-button>
 
-              <!-- Github -->
-              <b-button
-                block
-                size="lg"
-                class="position-relative border-0"
-                variant="transparent"
-                @click="loginWithGithub"
-              >
-                <img
-                  class="logo position-absolute"
-                  :src="require('@/assets/images/github_logo.svg')"
-                  alt="facebook"
-                />
-                <span>Continue with Github</span>
-              </b-button>
+        <!-- Github -->
+        <b-button
+          block
+          size="lg"
+          class="position-relative border-0"
+          variant="transparent"
+          @click="loginWithGithub"
+        >
+          <img
+            class="logo position-absolute"
+            :src="require('@/assets/images/github_logo.svg')"
+            alt="facebook"
+          />
+          <span>Continue with Github</span>
+        </b-button>
 
-              <span class="d-block">OR</span>
-            </div>
+        <span class="d-block">OR</span>
+      </div>
 
-            <!-- 表单 -->
-            <b-form autocomplete="off" @submit.prevent="loginWithEmail">
-              <b-form-group
-                class="mb-4"
-                invalid-feedback="Enter at least 1 character or more"
-              >
-                <b-form-input
-                  trim
-                  size="lg"
-                  ref="input"
-                  placeholder="Email"
-                  class="form-username"
-                  :state="usernameState"
-                  v-model="form.email"
-                  @change="checkValidity"
-                ></b-form-input>
-              </b-form-group>
+      <!-- 表单 -->
+      <b-form autocomplete="off" @submit.stop.prevent="loginWithEmailAndPwd">
+        <b-form-group class="mb-4" invalid-feedback="Invalid email">
+          <b-form-input
+            trim
+            size="lg"
+            placeholder="Email"
+            class="form-email"
+            :state="validateState('email')"
+            v-model="$v.form.email.$model"
+          ></b-form-input>
+        </b-form-group>
 
-              <b-button
-                block
-                size="lg"
-                type="submit"
-                variant="primary"
-                class="btn-login d-flex justify-content-center align-items-center"
-                :disabled="isValid"
-              >
-                <b-spinner
-                  small
-                  v-if="showLoading"
-                  class="mr-2"
-                  label="Loading..."
-                />
-                Login
-              </b-button>
-            </b-form>
-          </b-card>
-        </b-col>
-        <b-col lg="3"></b-col>
-      </b-row>
-    </b-container>
+        <b-form-group
+          class="mb-4"
+          invalid-feedback="Invalid password"
+          v-if="inputPwdShow"
+        >
+          <b-form-input
+            trim
+            size="lg"
+            placeholder="Password"
+            class="form-password"
+            :state="validateState('password')"
+            v-model="$v.form.password.$model"
+          ></b-form-input>
+        </b-form-group>
+
+        <b-button
+          block
+          size="lg"
+          type="submit"
+          variant="primary"
+          class="btn-login d-flex justify-content-center align-items-center"
+          :disabled="btnDisabled"
+        >
+          <b-spinner small v-if="loadingShow" class="mr-2" label="Loading..." />
+          <span>{{ !inputPwdShow ? 'Continue' : 'Login' }}</span>
+        </b-button>
+      </b-form>
+    </b-card>
 
     <b-toast id="login-toast" variant="info" solid no-auto-hide>
       <template v-slot:toast-title>
@@ -138,24 +134,13 @@
 
 <script>
 import { mapActions } from 'vuex'
+import { email, required } from 'vuelidate/lib/validators'
 import moment from 'moment'
 import AppAlert from '@/components/AppAlert'
 
 export default {
   components: { AppAlert },
   computed: {
-    usernameState() {
-      if (this.hasValidated) {
-        return this.form.email.length > 0 ? true : false
-      } else {
-        return null
-      }
-    },
-    isValid() {
-      const result = this.form.email.length > 0
-
-      return result ? false : true
-    },
     date() {
       return moment().format('DD MMMM, h:mm a')
     }
@@ -163,14 +148,28 @@ export default {
   data() {
     return {
       form: {
-        email: ''
+        email: '',
+        password: ''
       },
-      hasValidated: false,
-      showLoading: false,
+      loadingShow: false,
+      inputPwdShow: false,
 
       alertShow: false,
       alertMessage: '',
-      alertVariant: ''
+      alertVariant: '',
+
+      btnDisabled: false
+    }
+  },
+  validations: {
+    form: {
+      email: {
+        email,
+        required
+      },
+      password: {
+        required
+      }
     }
   },
   methods: {
@@ -179,12 +178,23 @@ export default {
       'signInWithGoogle',
       'signInWithGithub'
     ]),
-    checkValidity() {
-      if (!this.hasValidated) {
-        this.hasValidated = true
-      }
+    validateState(name) {
+      const { $dirty, $error } = this.$v.form[name]
+
+      return $dirty ? !$error : null
     },
-    loginWithEmail() {
+    loginWithEmailAndPwd() {
+      if (!this.$v.form.email.$error && !this.inputPwdShow) {
+        this.inputPwdShow = true
+        return false
+      }
+
+      this.$v.form.$touch()
+
+      if (this.$v.form.$anyError) {
+        return false
+      }
+
       this.navigateToChat()
     },
     async loginWithTwitter() {
@@ -244,7 +254,8 @@ export default {
 
 <style lang="scss" scoped>
 .login {
-  background: url('../assets/images/login-background.svg') no-repeat center/100%;
+  background: url('../assets/images/login-background.svg') no-repeat
+    center/cover;
 }
 
 .lead {
@@ -252,6 +263,7 @@ export default {
 }
 
 .card {
+  width: 520px;
   border-radius: 8px;
   box-shadow: 0 5px 5px 0 rgba(154, 160, 185, 0.05),
     0 5px 30px 0 rgba(166, 173, 201, 0.22);
@@ -314,7 +326,8 @@ export default {
     }
   }
 
-  .form-username {
+  .form-email,
+  .form-password {
     letter-spacing: 0.2px;
     font: 400 16px/24px AkkuratPro;
 

@@ -1,0 +1,38 @@
+.member-profile-card {
+  border-radius: 8px !important;
+  background: white;
+  box-shadow: rgba(29, 28, 29, 0.13) 0px 0px 0px 1px, rgba(0, 0, 0, 0.08) 0px 4px 12px 0px;
+
+  > .card-img-top {
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+  }
+
+  .full-profile-link {
+    margin: -16px 16px 16px;
+    color: rgb(18, 100, 163);
+  }
+
+  .field {
+    padding: 0 16px 12px 16px;
+
+    .label {
+      color: rgba(29, 28, 29, 0.7);
+      font-weight: 700;
+      font-size: 13px;
+      line-height: 1.38463;
+    }
+  }
+
+  .buttons {
+    .btn {
+      height: 36px;
+      color: rgb(29, 28, 29);
+
+      &:hover {
+        background: rgba(29, 28, 29, 0.04);
+        box-shadow: 0 1px 3px 0 rgba(0,0,0,.08);
+      }
+    }
+  }
+}

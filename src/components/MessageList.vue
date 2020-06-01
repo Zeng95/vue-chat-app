@@ -1,23 +1,15 @@
 <template>
-  <div class="message-list">
-    <h4>Messages</h4>
+  <div class="message-list" v-chat-scroll="{ always: false, smooth: true }">
+    <p class="nomessages text-secondary" v-if="messages.length === 0">
+      [No messages yet!]
+    </p>
 
-    <hr />
-
-    <div class="message-group" v-chat-scroll="{ always: false, smooth: true }">
-      <transition name="fade" mode="out-in">
-        <p class="nomessages text-secondary" v-if="messages.length === 0">
-          [No messages yet!]
-        </p>
-
-        <div class="messages" v-else>
-          <MessageItem
-            v-for="message in messages"
-            :key="message._id"
-            :message="message"
-          />
-        </div>
-      </transition>
+    <div class="messages" v-else>
+      <MessageItem
+        v-for="message in messages"
+        :key="message._id"
+        :message="message"
+      />
     </div>
   </div>
 </template>
@@ -42,14 +34,14 @@ export default {
     }),
     ...mapGetters('channels', ['currentChannel'])
   },
+  methods: {
+    ...mapActions('messages', ['fetchMessages', 'clearMessagesLocally'])
+  },
   watch: {
     currentChannel() {
       this.clearMessagesLocally()
       this.fetchMessages()
     }
-  },
-  methods: {
-    ...mapActions('messages', ['fetchMessages', 'clearMessagesLocally'])
   }
 }
 </script>

@@ -60,16 +60,19 @@ const router = new VueRouter({
 })
 
 router.beforeEach((to, from, next) => {
+  const channel = store.getters['channels/currentChannel']
+
   NProgress.configure({ showSpinner: false })
   NProgress.start()
 
-  store.dispatch('auth/initAuthentication').then(user => {
+  store.dispatch('auth/initAuthentication').then(isAuthenticated => {
     if (to.matched.some(record => record.meta.requiresAuth)) {
       // 如果用户存在，说明是登录状态，允许继续跳转
-      user ? next() : next({ name: 'Home' })
+      isAuthenticated ? next() : next({ name: 'Home' })
     } else if (to.matched.some(record => record.meta.requiresGuest)) {
+      console.log(channel)
       // 如果用户存在，说明是登录状态，需要跳转到 Chat 页面
-      !user ? next() : next({ name: 'Chat' })
+      isAuthenticated ? next({ name: 'Chat' }) : next()
     } else {
       // Make sure to always call next()!
       next()
