@@ -1,4 +1,6 @@
+/* eslint-disable no-unused-vars */
 import Vue from 'vue'
+import gravatar from 'gravatar'
 import { firestoreDB } from '@/firebase.config'
 
 // initial state
@@ -22,25 +24,23 @@ const actions = {
     return new Promise((resolve, reject) => {
       const usersRef = firestoreDB.collection('users')
 
-      const { displayName, email, photoURL } = user
+      const { displayName, email, photoURL, username } = user
       const newUser = {
-        username: displayName ? displayName.split(' ')[0] : email,
-        name: displayName,
+        username: displayName ? displayName.split(' ')[0] : username,
+        name: displayName ? displayName : email,
         avatar: photoURL
+          ? photoURL
+          : gravatar.url(email, { d: 'identicon', protocol: 'https' })
       }
 
       usersRef
         .doc(userId)
         .set(newUser)
-        .then(() => {
-          commit('SET_CURRENT_USER', newUser)
-          resolve()
-        })
+        .then(() => resolve())
         .catch(error => reject(error))
     })
   },
 
-  // eslint-disable-next-line no-unused-vars
   updateUser({ state }, { userId, user }) {
     return new Promise((resolve, reject) => {
       const usersRef = firestoreDB.collection('users')

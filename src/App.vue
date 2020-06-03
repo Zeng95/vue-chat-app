@@ -49,14 +49,16 @@ html {
   -webkit-font-smoothing: antialiased;
 }
 
+:focus {
+  outline: none !important;
+}
+
 ::-webkit-scrollbar {
   display: none;
 }
 
-button {
-  &:focus {
-    outline: none;
-  }
+p {
+  margin: 0;
 }
 
 #nprogress .bar {

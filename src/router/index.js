@@ -20,6 +20,13 @@ const routes = [
     meta: { requiresGuest: true }
   },
   {
+    path: '/register',
+    name: 'Register',
+    component: () =>
+      import(/* webpackChunkName: "register" */ '../views/Register'),
+    meta: { requiresGuest: true }
+  },
+  {
     path: '/logout',
     name: 'Logout',
     beforeEnter: async (to, from, next) => {

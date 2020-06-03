@@ -1,5 +1,5 @@
 <template>
-  <div class="login vh-100 d-flex flex-column justify-content-center">
+  <div class="register vh-100 d-flex flex-column justify-content-center">
     <b-jumbotron
       header="Real-Time Chat"
       header-level="4"
@@ -9,58 +9,66 @@
       class="text-center mb-0 pt-0 pb-4"
     />
 
+    <b-button class="btn-login" variant="transparent">
+      <router-link :to="{ name: 'Login' }">Log in</router-link>
+    </b-button>
+
     <b-card
       class="border-0 mx-auto"
-      title="Welcome back"
-      title-tag="h2"
-      footer-tag="footer"
       header-class="p-0 border-0 bg-transparent"
       body-class="px-5"
-      footer-class="text-center border-0 bg-transparent"
     >
       <template v-slot:header></template>
+
+      <b-card-title title="Start Chatting Now" title-tag="h2" class="mb-0" />
+
+      <b-card-sub-title
+        sub-title="Let's create your account."
+        sub-title-tag="p"
+        class="text-center text-reset"
+      />
 
       <!-- 第三方登录 -->
       <div class="additional">
         <!-- Twitter -->
-        <b-button block class="btn-unstyled" @click="loginWithTwitter">
+        <b-button class="btn-unstyled flex-fill mr-2" @click="loginWithTwitter">
           <img
             class="logo"
             :src="require('@/assets/images/twitter_logo.svg')"
             alt="twitter"
           />
-          <span>Continue with Twitter</span>
+          <span>Twitter</span>
         </b-button>
 
         <!-- Google -->
-        <b-button block class="btn-unstyled" @click="loginWithGoogle">
+        <b-button class="btn-unstyled flex-fill mr-2" @click="loginWithGoogle">
           <img
             class="logo"
             :src="require('@/assets/images/google_logo.svg')"
             alt="google"
           />
-          <span>Continue with Google</span>
+          <span>Google</span>
         </b-button>
 
         <!-- Github -->
-        <b-button block class="btn-unstyled" @click="loginWithGithub">
+        <b-button class="btn-unstyled flex-fill" @click="loginWithGithub">
           <img
             class="logo"
             :src="require('@/assets/images/github_logo.svg')"
             alt="github"
           />
-          <span>Continue with Github</span>
+          <span>Github</span>
         </b-button>
       </div>
 
-      <span class="or">OR</span>
+      <span class="or">OR USE YOUR EMAIL TO REGISTER:</span>
 
       <!-- 表单 -->
       <b-form
         novalidate
         class="form"
         autocomplete="off"
-        @submit.stop.prevent="loginWithEmailAndPwd"
+        @submit.stop.prevent="registerWithEmailAndPwd"
       >
         <!-- 邮箱 -->
         <b-form-group class="mb-4" invalid-feedback="Invalid email">
@@ -71,46 +79,53 @@
             placeholder="Email"
             :state="validateState('email')"
             v-model="$v.form.email.$model"
+            @focus="inputFocus"
           ></b-form-input>
         </b-form-group>
 
-        <!-- 密码 -->
-        <b-form-group
-          class="mb-4"
-          invalid-feedback="Use 6 characters or more"
-          v-if="inputPwdShow"
-        >
-          <b-form-input
-            trim
-            type="password"
-            placeholder="Password"
-            class="password"
-            :state="validateState('password')"
-            v-model="$v.form.password.$model"
-          ></b-form-input>
-        </b-form-group>
+        <transition name="slide-down">
+          <div v-if="isInputFocusing">
+            <!-- 密码 -->
+            <b-form-group class="mb-4" invalid-feedback="At least 6 characters">
+              <b-form-input
+                trim
+                type="password"
+                placeholder="Password"
+                class="password"
+                :state="validateState('password')"
+                v-model="$v.form.password.$model"
+              ></b-form-input>
+            </b-form-group>
+
+            <!-- 用户名 -->
+            <b-form-group class="mb-0" invalid-feedback="Username is required">
+              <b-form-input
+                trim
+                type="text"
+                placeholder="Username"
+                class="username"
+                :state="validateState('username')"
+                v-model="$v.form.username.$model"
+              ></b-form-input>
+            </b-form-group>
+          </div>
+        </transition>
 
         <b-button
           block
           size="lg"
           type="submit"
           variant="primary"
-          :disabled="$v.form.email.$invalid"
-          class="btn-login d-flex justify-content-center align-items-center"
+          :disabled="$v.form.$invalid"
+          class="btn-register d-flex justify-content-center align-items-center mt-4"
         >
           <b-spinner v-if="loadingShow" label="Loading..." />
-          <span v-else>{{ !inputPwdShow ? 'Continue' : 'Login' }}</span>
+          <span v-else>Register</span>
         </b-button>
       </b-form>
-
-      <template v-slot:footer>
-        <router-link :to="{ name: 'Register' }" class="create-account-callout">
-          Don’t have an account?
-        </router-link>
-      </template>
     </b-card>
 
-    <b-toast id="login-toast" variant="info" solid no-auto-hide>
+    <b-toast id="register-toast" variant="info" solid no-auto-hide>
       <template v-slot:toast-title>
         <div class="d-flex flex-grow-1 align-items-baseline">
           <strong class="mr-auto">Info</strong>
@@ -146,9 +161,10 @@ export default {
     return {
       form: {
         email: '',
-        password: ''
+        password: '',
+        username: ''
       },
-      inputPwdShow: false,
+      isInputFocusing: false,
 
       alertShow: false,
       alertMessage: '',
@@ -166,6 +182,9 @@ export default {
       password: {
         required,
         minLength: minLength(6)
+      },
+      username: {
+        required
       }
     }
   },
@@ -174,7 +193,7 @@ export default {
       'signInWithTwitter',
       'signInWithGoogle',
       'signInWithGithub',
-      'signInWithEmailAndPwd'
+      'signUpWithEmailAndPwd'
     ]),
     validateState(name) {
       const { $dirty, $error } = this.$v.form[name]
@@ -185,52 +204,44 @@ export default {
       this.$router.push({ name: 'Chat' })
     },
     // 邮箱和密码登录
-    async loginWithEmailAndPwd() {
+    async registerWithEmailAndPwd() {
       try {
-        // 显示密码输入框，退出函数
-        if (!this.inputPwdShow) {
-          this.inputPwdShow = true
+        this.$v.form.$touch()
+
+        if (this.$v.form.$anyError) {
           return false
         }
 
-        // 邮箱校验通过，已显示密码输入框
-        if (this.inputPwdShow) {
-          this.$v.form.password.$touch()
+        this.loadingShow = true
+        this.$bvToast.show('register-toast')
 
-          if (this.$v.form.password.$anyError) {
-            return false
-          }
+        await this.signUpWithEmailAndPwd({
+          email: this.form.email,
+          password: this.form.password,
+          username: this.form.username
+        })
 
-          this.loadingShow = true
-          this.$bvToast.show('login-toast')
-
-          await this.signInWithEmailAndPwd({
-            email: this.form.email,
-            password: this.form.password
-          })
-
-          this.navigateToChat()
-        }
+        this.navigateToChat()
       } catch (error) {
         this.alertShow = true
         this.alertMessage = error.message
         this.alertVariant = 'danger'
       } finally {
         this.loadingShow = false
-        this.$bvToast.hide('login-toast')
+        this.$bvToast.hide('register-toast')
       }
     },
     // Twitter 账户登录
     async loginWithTwitter() {
       try {
-        this.$bvToast.show('login-toast')
+        this.$bvToast.show('register-toast')
 
         await this.signInWithTwitter()
 
-        this.$bvToast.hide('login-toast')
+        this.$bvToast.hide('register-toast')
         this.navigateToChat()
       } catch (error) {
-        this.$bvToast.hide('login-toast')
+        this.$bvToast.hide('register-toast')
 
         this.alertShow = true
         this.alertMessage = error.message
@@ -240,13 +251,13 @@ export default {
     // Google 账户登录
     async loginWithGoogle() {
       try {
-        this.$bvToast.show('login-toast')
+        this.$bvToast.show('register-toast')
         await this.signInWithGoogle()
 
-        this.$bvToast.hide('login-toast')
+        this.$bvToast.hide('register-toast')
         this.navigateToChat()
       } catch (error) {
-        this.$bvToast.hide('login-toast')
+        this.$bvToast.hide('register-toast')
 
         this.alertShow = true
         this.alertMessage = error.message
@@ -256,18 +267,21 @@ export default {
     // Github 账户登录
     async loginWithGithub() {
       try {
-        this.$bvToast.show('login-toast')
+        this.$bvToast.show('register-toast')
         await this.signInWithGithub()
 
-        this.$bvToast.hide('login-toast')
+        this.$bvToast.hide('register-toast')
         this.navigateToChat()
       } catch (error) {
-        this.$bvToast.hide('login-toast')
+        this.$bvToast.hide('register-toast')
 
         this.alertShow = true
         this.alertMessage = error.message
         this.alertVariant = 'danger'
       }
+    },
+    inputFocus() {
+      this.isInputFocusing = true
     }
   },
   beforeCreate() {
@@ -277,7 +291,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.login {
+.register {
   background: url('../assets/images/login-background.svg') no-repeat
     center/cover;
   color: #0e101a;
@@ -286,6 +300,28 @@ export default {
 
 .lead {
   margin-bottom: 0;
+}
+
+.btn-login {
+  position: absolute;
+  top: 25px;
+  right: 24px;
+  padding: 0;
+  min-width: 70px;
+  height: 32px;
+  border: 0;
+  font-weight: 700;
+  line-height: 32px;
+
+  &:focus {
+    box-shadow: unset;
+  }
+
+  a {
+    &:hover {
+      text-decoration: none;
+    }
+  }
 }
 
 .card {
@@ -301,27 +337,31 @@ export default {
     background-image: linear-gradient(-71deg, #4c7af1, #15c39a 95%);
   }
 
+  .card-body {
+    padding-top: 24px;
+    padding-bottom: 24px;
+  }
+
   .card-title {
-    margin-bottom: 24px;
     color: #2b2d38;
     text-align: center;
     font-weight: 600;
     line-height: 40px;
   }
 
-  .card-body {
-    padding-top: 24px;
-    padding-bottom: 0;
-  }
-
-  .card-footer {
-    padding: 24px 0;
+  .card-subtitle {
+    font-size: 16px;
+    line-height: 28px;
   }
 
   .additional {
+    display: flex;
+    margin-top: 24px;
+
     .btn {
-      position: relative;
-      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       height: 48px;
       background: #f0f2fc;
       color: #4d536e;
@@ -341,12 +381,9 @@ export default {
     }
 
     .logo {
-      position: absolute;
-      top: 50%;
-      left: 15px;
+      margin-right: 8px;
       width: 16px;
       height: 16px;
-      transform: translateY(-50%);
     }
   }
 
@@ -364,7 +401,8 @@ export default {
 
   .form {
     .email,
-    .password {
+    .password,
+    .username {
       padding-top: 12px;
       padding-bottom: 12px;
       height: 48px;
@@ -389,7 +427,7 @@ export default {
     }
   }
 
-  .btn-login {
+  .btn-register {
     height: 50px;
     border: 0;
     font-size: 18px;
@@ -405,9 +443,17 @@ export default {
       border-width: 0.15em;
     }
   }
+}
 
-  .create-account-callout {
-    transition: color 0.1s;
-  }
+.slide-down-enter-active,
+.slide-down-leave-active {
+  overflow: hidden;
+  height: 117px;
+  transition: height 0.5s;
+}
+
+.slide-down-enter,
+.slide-down-leave-to {
+  height: 0;
 }
 </style>

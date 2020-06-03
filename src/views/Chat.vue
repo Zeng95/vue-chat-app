@@ -11,23 +11,27 @@
         sidebar-class="sidebar"
         bg-variant="blue"
       >
-        <MemberList />
-
         <ChannelList />
+
+        <MemberList />
       </b-sidebar>
 
-      <div role="main" class="primary-view-contents ml-auto">
-        <b-jumbotron
-          header="BootstrapVue"
-          lead="Bootstrap v4 Components for Vue.js 2"
-        >
-          <p>For more information visit website</p>
-          <b-button variant="primary" href="#">More Info</b-button>
-        </b-jumbotron>
+      <div role="main" class="contents ml-auto">
+        <div>
+          <b-jumbotron
+            header="BootstrapVue"
+            lead="Bootstrap v4 Components for Vue.js 2"
+          >
+            <p>For more information visit website</p>
+            <b-button variant="primary" href="#">More Info</b-button>
+          </b-jumbotron>
 
-        <MessageList />
+          <MessageList />
+        </div>
 
-        <MessageForm />
+        <footer class="footer">
+          <MessageForm />
+        </footer>
       </div>
     </div>
   </div>
@@ -68,7 +72,7 @@ export default {
   height: calc(100% - 63px) !important;
 }
 
-.primary-view-contents {
+.contents {
   width: calc(100% - 260px);
 }
 </style>
