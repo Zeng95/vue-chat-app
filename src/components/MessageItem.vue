@@ -24,7 +24,7 @@
         </a>
 
         <!-- 内容 -->
-        <p class="mb-0">{{ message.text }}</p>
+        <div class="mb-0" v-html="message.content"></div>
       </b-media-body>
     </b-media>
 
@@ -135,7 +135,7 @@ export default {
 <style lang="scss" scoped>
 .message {
   &:hover {
-    background-color: var(--light);
+    background-color: var(--light-gray);
   }
 
   .sender {

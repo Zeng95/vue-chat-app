@@ -7,7 +7,7 @@
 
     <b-navbar-nav class="ml-auto align-items-center">
       <b-nav-text class="d-flex align-items-center">
-        <span class="mr-2">{{ currentUser.name }}</span>
+        <span class="mr-2">{{ currentUser.username }}</span>
         <b-avatar :src="currentUser.avatar" class="mr-2" />|
       </b-nav-text>
       <b-nav-item :to="{ name: 'Logout' }" active>Logout</b-nav-item>
@@ -27,6 +27,10 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.navbar {
+  height: 50px;
+}
+
 .logo {
   width: 35px;
   height: 35px;

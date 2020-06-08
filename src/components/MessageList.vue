@@ -5,6 +5,33 @@
     </p>
 
     <div class="messages" v-else>
+      <div v-if="!isPrivate">
+        <!-- Channel name -->
+        <h1>
+          <span class="icon-hash">
+            <b-icon-hash />
+          </span>
+
+          <span>{{ currentChannel.name }}</span>
+        </h1>
+
+        <!-- 段落 -->
+        <p>
+          You created this channel today. This is the very beginning of the
+          <strong>
+            <span class="icon-hash"><b-icon-hash /></span>
+            <span>{{ currentChannel.name }}</span>
+          </strong>
+          channel.
+        </p>
+
+        <!-- 按钮 -->
+        <div>
+          <b-button variant="transparent">Add description</b-button>
+          <b-button variant="transparent">Add people</b-button>
+        </div>
+      </div>
+
       <MessageItem
         v-for="message in messages"
         :key="message._id"
@@ -17,12 +44,14 @@
 <script>
 import { mapState, mapGetters, mapActions } from 'vuex'
 import MessageItem from './MessageItem'
+import { BIconHash } from 'bootstrap-vue'
 
 export default {
   name: 'MessageList',
-  components: { MessageItem },
+  components: { MessageItem, BIconHash },
   computed: {
     ...mapState({
+      isPrivate: state => state.channels.isPrivate,
       messages: state => {
         const itemsArr = Object.values(state.messages.items)
 
@@ -39,8 +68,9 @@ export default {
   },
   watch: {
     currentChannel() {
-      this.clearMessagesLocally()
-      this.fetchMessages()
+      console.log('channel changed')
+      // this.clearMessagesLocally()
+      // this.fetchMessages()
     }
   }
 }

@@ -11,11 +11,12 @@ const state = () => {
 // actions
 const actions = {
   createMessage({ rootState }, message) {
+    console.log(message)
     return new Promise((resolve, reject) => {
       const messagesRef = firestoreDB.collection('messages')
 
       message.userId = rootState.auth.authId
-      message.channelId = rootState.channels.id
+      message.channelId = rootState.channels.activeItem.id
 
       // Add a new document with an auto-generated id.
       messagesRef

@@ -1,5 +1,5 @@
 <template>
-  <div class="channel-list mb-5">
+  <div class="channel-list">
     <b-navbar toggleable type="dark" variant="blue" class="px-0">
       <!-- Toggle -->
       <b-navbar-toggle
@@ -16,6 +16,7 @@
 
       <!-- Plus icon -->
       <b-button
+        id="popover-target-1"
         v-b-tooltip="{
           title: 'Add channels',
           trigger: 'hover',
@@ -23,23 +24,55 @@
         }"
         variant="transparent"
         class="icon-plus p-1 mr-3 border-0"
-        @click="modalShow = !modalShow"
       >
         <b-icon-plus class="w-100 h-100" />
       </b-button>
 
+      <b-popover
+        target="popover-target-1"
+        triggers="focus"
+        placement="bottomright"
+        boundary="viewport"
+        custom-class="menu mt-0 border-0"
+      >
+        <b-list-group tag="ul" flush>
+          <b-list-group-item tag="li" class="p-0 border-bottom-0">
+            <b-button
+              variant="light-gray"
+              class="btn-menu-item px-4 py-0 border-0 w-100 rounded-0"
+            >
+              Browse channels
+            </b-button>
+          </b-list-group-item>
+          <b-list-group-item tag="li" class="p-0">
+            <b-button
+              variant="light-gray"
+              class="btn-menu-item px-4 py-0 border-0 w-100 rounded-0"
+              @click="modalShow = !modalShow"
+            >
+              Create a channel
+            </b-button>
+          </b-list-group-item>
+        </b-list-group>
+      </b-popover>
+
       <!-- Collapse -->
-      <b-collapse id="collapse-channels" is-nav>
+      <b-collapse id="collapse-channels" is-nav :visible="true">
         <b-navbar-nav>
           <b-nav-item
-            link-classes="d-flex px-3"
+            link-classes="sidebar-channel px-4 py-0"
             v-for="channel in channels"
             :key="channel._id"
             :active="getActiveChannel(channel)"
-            @click.stop="setCurrentChannel(channel)"
+            @click.stop="changeChannel(channel)"
           >
-            <span class="icon-hash"><b-icon-hash /></span>
-            <span>{{ channel.name }}</span>
+            <div class="d-flex align-items-center">
+              <span class="icon-hash">
+                <b-icon-hash />
+              </span>
+
+              <span>{{ channel.name }}</span>
+            </div>
           </b-nav-item>
         </b-navbar-nav>
       </b-collapse>
@@ -96,7 +129,11 @@ export default {
     }
   },
   methods: {
-    ...mapActions('channels', ['setCurrentChannel', 'createChannel']),
+    ...mapActions('channels', [
+      'setPrivate',
+      'setCurrentChannel',
+      'createChannel'
+    ]),
     async addChannel() {
       try {
         await this.createChannel(this.newChannel)
@@ -115,6 +152,10 @@ export default {
     },
     getActiveChannel(channel) {
       return channel._id === this.currentChannel.id
+    },
+    changeChannel(channel) {
+      this.setPrivate(false)
+      this.setCurrentChannel(channel)
     }
   }
 }
@@ -126,6 +167,11 @@ export default {
     font-size: 1rem;
   }
 
+  .sidebar-channel {
+    height: 28px;
+    line-height: 28px;
+  }
+
   .nav-link {
     &:hover,
     &:focus {
@@ -133,7 +179,8 @@ export default {
     }
 
     &.active {
-      background-color: #3f0e40;
+      background-color: var(--light);
+      color: var(--dark);
     }
   }
 
@@ -167,8 +214,15 @@ export default {
   }
 
   .icon-hash {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     width: 20px;
-    height: 20px;
+    height: auto;
+
+    .b-icon {
+      font-size: 1rem;
+    }
   }
 }
 </style>

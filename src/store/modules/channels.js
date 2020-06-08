@@ -1,10 +1,12 @@
+/* eslint-disable no-unused-vars */
 import { firestoreDB } from '@/firebase.config'
 
 // initial state
 const state = () => {
   return {
     items: {},
-    activeItem: { id: null, name: null }
+    activeItem: { id: null, name: null },
+    isPrivate: false
   }
 }
 
@@ -15,11 +17,16 @@ const getters = {
 
 // actions
 const actions = {
-  setCurrentChannel({ commit }, channel) {
-    commit('SET_CURRENT_CHANNEL', { id: channel._id, name: channel.name })
+  setPrivate({ commit }, isPrivate) {
+    commit('SET_PRIVATE', isPrivate)
   },
 
-  // eslint-disable-next-line no-unused-vars
+  setCurrentChannel({ commit }, channel) {
+    const { _id: id, name } = channel
+
+    commit('SET_CURRENT_CHANNEL', { id, name })
+  },
+
   createChannel({ state }, channel) {
     return new Promise((resolve, reject) => {
       firestoreDB
@@ -61,6 +68,10 @@ const actions = {
 const mutations = {
   SET_CURRENT_CHANNEL(state, channel) {
     state.activeItem = channel
+  },
+
+  SET_PRIVATE(state, isPrivate) {
+    state.isPrivate = isPrivate
   }
 }
 

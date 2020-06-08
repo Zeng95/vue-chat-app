@@ -49,6 +49,10 @@ html {
   -webkit-font-smoothing: antialiased;
 }
 
+body {
+  color: rgb(29, 28, 29);
+}
+
 :focus {
   outline: none !important;
 }

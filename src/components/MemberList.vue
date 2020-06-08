@@ -1,26 +1,4 @@
 <template>
-  <!-- <div class="user-list">
-    <h4>Members</h4>
-
-    <hr />
-
-    <b-list-group class="mt-3">
-      <b-list-group-item
-        v-for="user in filteredUsers"
-        :key="user._id"
-        class="d-flex justify-content-between align-items-center"
-      >
-        <b-avatar :src="user.avatar" v-if="showUserAvater"></b-avatar>
-        <a href="#">
-          <span>{{ user.name }}</span>
-        </a>
-        <b-badge :variant="statusColor(user.status)" pill>
-          {{ user.status }}
-        </b-badge>
-      </b-list-group-item>
-    </b-list-group>
-  </div> -->
-
   <div class="member-list mb-5">
     <b-navbar toggleable type="dark" variant="blue" class="px-0">
       <!-- Toggle -->
@@ -51,16 +29,30 @@
       </b-button>
 
       <!-- Collapse -->
-      <b-collapse id="collapse-members" is-nav>
+      <b-collapse id="collapse-members" is-nav :visible="true">
         <b-navbar-nav>
           <b-nav-item
-            link-classes="sidebar-channel d-flex align-items-center px-3 py-0"
+            link-classes="sidebar-channel d-flex align-items-center justify-content-between px-4 py-0"
             v-for="user in filteredUsers"
             :key="user._id"
+            :active="getActiveChannel(user)"
+            @click.stop="changeChanel(user)"
           >
-            <span class="icon-circle"><b-icon-circle /></span>
-            <span class="name">{{ user.name }}</span>
-            <b-badge pill>{{ user.status }}</b-badge>
+            <div class="d-flex">
+              <span class="icon-circle">
+                <b-icon-circle-fill
+                  :variant="getVariantByStatus(user.status)"
+                />
+              </span>
+              <span class="name">{{ user.username }}</span>
+            </div>
+
+            <!-- Status -->
+            <div class="status">
+              <b-badge pill :variant="getVariantByStatus(user.status)">
+                {{ user.status }}
+              </b-badge>
+            </div>
           </b-nav-item>
         </b-navbar-nav>
       </b-collapse>
@@ -76,19 +68,25 @@
 </template>
 
 <script>
-import { mapState, mapActions } from 'vuex'
-import { BIconPlus, BIconCircle, BIconCaretRightFill } from 'bootstrap-vue'
+import { mapState, mapGetters, mapActions } from 'vuex'
+import { BIconPlus, BIconCircleFill, BIconCaretRightFill } from 'bootstrap-vue'
 import AppAlert from '@/components/AppAlert'
 import { realtimeDB } from '@/firebase.config'
 
 export default {
   name: 'MemberList',
-  components: { BIconPlus, BIconCircle, BIconCaretRightFill, AppAlert },
+  components: {
+    BIconPlus,
+    BIconCircleFill,
+    BIconCaretRightFill,
+    AppAlert
+  },
   computed: {
     ...mapState({
       users: state => state.users.items,
       authId: state => state.auth.authId
     }),
+    ...mapGetters('channels', ['currentChannel']),
     filteredUsers() {
       return Object.values(this.users).filter(user => user._id !== this.authId)
     },
@@ -109,15 +107,10 @@ export default {
     }
   },
   methods: {
-    ...mapActions('auth', [
-      'disconnect',
-      'setOnlineStatus',
-      'setOfflineStatus'
-    ]),
     ...mapActions('users', ['updateUserStatus']),
+    ...mapActions('channels', ['setPrivate', 'setCurrentChannel']),
     addListeners() {
       this.userStatusRef.on('child_added', snapshot => {
-        console.log(snapshot)
         if (snapshot.key !== this.authId) {
           this.updateUserStatus({
             userId: snapshot.key,
@@ -135,9 +128,25 @@ export default {
         }
       })
     },
-    // 用户状态对应的背景颜色
-    statusColor(status) {
+    getVariantByStatus(status) {
       return status === 'online' ? 'success' : 'warning'
+    },
+    getChannelId(userId) {
+      return userId < this.authId
+        ? `${userId}/${this.authId}`
+        : `${this.authId}/${userId}`
+    },
+    changeChanel(user) {
+      const channelId = this.getChannelId(user._id)
+      const channel = { _id: channelId, name: user.username }
+
+      this.setPrivate(true)
+      this.setCurrentChannel(channel)
+    },
+    getActiveChannel(user) {
+      const channelId = this.getChannelId(user._id)
+
+      return channelId === this.currentChannel.id
     }
   },
   created() {
@@ -159,7 +168,35 @@ export default {
   .sidebar-channel {
     height: 28px;
     line-height: 28px;
-    opacity: 0.64;
+  }
+
+  .nav-link {
+    &:hover,
+    &:focus {
+      background-color: var(--primary);
+    }
+
+    &.active {
+      background-color: var(--light);
+      color: var(--dark);
+    }
+  }
+
+  .icon-caret {
+    margin-left: -7px;
+    width: 26px;
+    height: 26px;
+    line-height: 26px;
+    transition: transform 0.1s;
+    transform: translateY(-1px);
+
+    &.icon-caret-down {
+      transform: rotate(90deg) translateX(-1px);
+    }
+
+    .b-icon {
+      font-size: 12px;
+    }
   }
 
   .icon-plus {
@@ -178,9 +215,8 @@ export default {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-right: 1px;
     width: 20px;
-    height: 20px;
+    height: 28px;
 
     > .b-icon {
       font-size: 0.65rem;

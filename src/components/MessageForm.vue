@@ -1,42 +1,5 @@
 <template>
   <div class="message-form">
-    <!-- <b-form autocomplete="off" @submit.prevent="sendMessage">
-      <b-form-group
-        :label="`@${currentUser.username}`"
-        tooltip
-        label-size="sm"
-        label-for="input-message"
-        label-class="text-muted mb-0"
-        :state="messageState"
-        :invalid-feedback="invalidFeedback"
-      >
-        <b-input-group>
-          <b-form-input
-            trim
-            size="lg"
-            name="message"
-            id="input-message"
-            v-model="form.text"
-            placeholder="Message..."
-          />
-
-          <b-input-group-append>
-            <b-btn type="submit" variant="primary" title="send message">
-              <b-icon-cursor-fill />
-            </b-btn>
-            <b-btn
-              v-b-modal.modal-upload
-              class="text-white"
-              variant="warning"
-              title="upload photo"
-            >
-              <b-icon-image-fill />
-            </b-btn>
-          </b-input-group-append>
-        </b-input-group>
-      </b-form-group>
-    </b-form> -->
-
     <div
       class="editor position-relative"
       :class="{ focus: isFocusing }"
@@ -144,9 +107,12 @@
 
           <div class="buttons position-absolute">
             <b-button
+              v-b-tooltip.hover
+              title="Send message"
               variant="transparent"
               class="btn-unstyled btn-send"
-              disabled
+              :disabled="message === null"
+              @click="sendMessage"
             >
               <b-icon-cursor-fill rotate="45" />
             </b-button>
@@ -205,7 +171,7 @@
 </template>
 
 <script>
-import { mapGetters, mapActions } from 'vuex'
+import { mapState, mapGetters, mapActions } from 'vuex'
 import {
   BIconAt,
   BIconType,
@@ -270,46 +236,15 @@ export default {
     BIconTypeStrikethrough
   },
   computed: {
-    ...mapGetters('users', ['currentUser']),
-    ...mapGetters('channels', ['currentChannel']),
-    messageState() {
-      if (!this.hasValidated) return null
-
-      return this.form.text.length > 0 ? true : false
-    },
-    invalidFeedback() {
-      return this.form.text.length > 0 ? '' : 'Please enter the message'
-    }
+    ...mapState({ isPrivate: state => state.channels.isPrivate }),
+    ...mapGetters('channels', ['currentChannel'])
   },
   data() {
     return {
-      form: { text: '' },
-      hasValidated: false,
+      message: null,
       isFocusing: true,
 
-      editor: new Editor({
-        autoFocus: true,
-        extensions: [
-          new Blockquote(),
-          new CodeBlock(),
-          new BulletList(),
-          new OrderedList(),
-          new ListItem(),
-          new Bold(),
-          new Code(),
-          new Italic(),
-          new Link(),
-          new Strike(),
-          new Underline(),
-          new Placeholder({
-            emptyEditorClass: 'is-editor-empty',
-            emptyNodeClass: 'is-empty',
-            emptyNodeText: 'Message',
-            showOnlyWhenEditable: true,
-            showOnlyCurrent: true
-          })
-        ]
-      }),
+      editor: null,
 
       alertShow: false,
       alertMessage: '',
@@ -317,16 +252,11 @@ export default {
     }
   },
   methods: {
-    ...mapActions('messages', ['fetchMessages', 'createMessage']),
+    ...mapActions('messages', ['createMessage']),
     async sendMessage() {
       try {
-        this.hasValidated = true
-
-        // 如果校验结果为 false 则退出函数
-        if (!this.messageState) return false
-
         await this.createMessage({
-          text: this.form.text,
+          content: this.message,
           timestamp: window.firebase.firestore.Timestamp.now()
         })
 
@@ -339,8 +269,7 @@ export default {
         this.alertVariant = 'danger'
       } finally {
         // Reset message
-        this.form.text = ''
-        this.hasValidated = false
+        this.editor.clearContent()
       }
     },
     onFocus() {
@@ -352,6 +281,52 @@ export default {
   },
   directives: {
     ClickOutside
+  },
+  watch: {
+    currentChannel(val) {
+      const prefix = 'Message'
+
+      if (!this.isPrivate) {
+        this.editor.extensions.options.placeholder.emptyNodeText = `${prefix} #${val.name}`
+      } else {
+        this.editor.extensions.options.placeholder.emptyNodeText = `${prefix} ${val.name}`
+      }
+    }
+  },
+  created() {
+    this.editor = new Editor({
+      autoFocus: true,
+      extensions: [
+        new Blockquote(),
+        new CodeBlock(),
+        new BulletList(),
+        new OrderedList(),
+        new ListItem(),
+        new Bold(),
+        new Code(),
+        new Italic(),
+        new Link(),
+        new Strike(),
+        new Underline(),
+        new Placeholder({
+          emptyEditorClass: 'is-editor-empty',
+          emptyNodeClass: 'is-empty',
+          emptyNodeText: `Message #${this.currentChannel.name}`,
+          showOnlyWhenEditable: true,
+          showOnlyCurrent: true
+        })
+      ],
+      onUpdate: ({ getHTML }) => {
+        let div = document.createElement('div')
+        div.innerHTML = getHTML()
+
+        if (div.innerText.trim().length === 0) {
+          this.message = null
+        } else {
+          this.message = getHTML()
+        }
+      }
+    })
   },
   beforeDestroy() {
     this.editor.destroy()
@@ -469,6 +444,10 @@ export default {
     .btn-unstyled {
       opacity: 0.2;
       pointer-events: none;
+
+      &:not(:last-child) {
+        margin-right: 1px;
+      }
     }
   }
 
@@ -482,9 +461,21 @@ export default {
 
       &.btn-send {
         right: 0;
-        color: rgba(29, 28, 29, 0.7);
+        background: #007a5a;
+        color: #fff;
+        transition: opacity 0.2s, background-color 0.2s, color 0.2s;
+
+        &:hover {
+          background: #148567;
+        }
+
+        &:active {
+          background: rgba(29, 28, 29, 0.13);
+        }
 
         &:disabled {
+          background: unset;
+          color: rgba(29, 28, 29, 0.7);
           opacity: 0.2;
         }
       }
