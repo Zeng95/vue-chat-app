@@ -252,13 +252,20 @@ export default {
     }
   },
   methods: {
-    ...mapActions('messages', ['createMessage']),
+    ...mapActions('messages', ['createMessage', 'createPrivateMessage']),
     async sendMessage() {
       try {
-        await this.createMessage({
-          content: this.message,
-          timestamp: window.firebase.firestore.Timestamp.now()
-        })
+        if (this.isPrivate) {
+          await this.createPrivateMessage({
+            content: this.message,
+            timestamp: window.firebase.firestore.Timestamp.now()
+          })
+        } else {
+          await this.createMessage({
+            content: this.message,
+            timestamp: window.firebase.firestore.Timestamp.now()
+          })
+        }
 
         this.alertShow = true
         this.alertMessage = 'Send successfully'
@@ -268,7 +275,7 @@ export default {
         this.alertMessage = error.message
         this.alertVariant = 'danger'
       } finally {
-        // Reset message
+        // Clear message
         this.editor.clearContent()
       }
     },
