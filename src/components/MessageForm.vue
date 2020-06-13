@@ -2,7 +2,7 @@
   <div class="message-form">
     <div
       class="editor position-relative"
-      :class="{ focus: isFocusing }"
+      :class="{ focus: messageFormFocused }"
       @click="onFocus"
       v-click-outside="onBlur"
     >
@@ -106,6 +106,7 @@
           </div>
 
           <div class="buttons position-absolute">
+            <!-- Send message -->
             <b-button
               v-b-tooltip.hover
               title="Send message"
@@ -116,6 +117,8 @@
             >
               <b-icon-cursor-fill rotate="45" />
             </b-button>
+
+            <!-- Upload file -->
             <b-button
               v-b-tooltip.hover
               title="Attach file"
@@ -124,18 +127,24 @@
             >
               <b-icon-paperclip flip-h />
             </b-button>
+
+            <!-- Emoji -->
             <b-button
               v-b-tooltip.hover
               title="Emoji"
               variant="transparent"
               class="btn-unstyled btn-emoji"
+              @click.stop="toggleEmojiPicker"
             >
               <b-icon-emoji-smile class="icon-emoji-smile" />
+
               <b-iconstack class="icon-emoji-laughing">
                 <b-icon-circle-fill stacked variant="warning" />
                 <b-icon-emoji-laughing stacked />
               </b-iconstack>
             </b-button>
+
+            <!-- Mention -->
             <b-button
               v-b-tooltip.hover
               title="Mention someone"
@@ -144,6 +153,8 @@
             >
               <b-icon-at />
             </b-button>
+
+            <!-- Hide formatting -->
             <b-button
               v-b-tooltip.hover
               title="Hide formatting"
@@ -159,9 +170,14 @@
 
     <div class="notification-bar"></div>
 
-    <MessageModalUpload />
+    <message-emoji-picker
+      v-if="emojiPickerShow"
+      :autoFocus="emojiPickerFocused"
+    />
 
-    <AppAlert
+    <message-modal-upload />
+
+    <app-alert
       :visible="alertShow"
       :message="alertMessage"
       :variant="alertVariant"
@@ -208,13 +224,13 @@ import {
 } from 'tiptap-extensions'
 import ClickOutside from 'vue-click-outside'
 import AppAlert from '@/components/AppAlert'
-import MessageModalUpload from '@/components/MessageModalUpload'
+import MessageModalUpload from './MessageModalUpload'
+import MessageEmojiPicker from './MessageEmojiPicker'
 
 export default {
   name: 'MessageForm',
   components: {
     AppAlert,
-    MessageModalUpload,
     BIconAt,
     BIconCode,
     BIconType,
@@ -233,7 +249,9 @@ export default {
     BIconCircleFill,
     BIconEmojiLaughing,
     BIconBlockquoteLeft,
-    BIconTypeStrikethrough
+    BIconTypeStrikethrough,
+    MessageModalUpload,
+    MessageEmojiPicker
   },
   computed: {
     ...mapState({ isPrivate: state => state.channels.isPrivate }),
@@ -242,17 +260,73 @@ export default {
   data() {
     return {
       message: null,
-      isFocusing: true,
+      messageFormFocused: true,
 
-      editor: null,
+      emojiPickerShow: false,
+      emojiPickerFocused: false,
 
       alertShow: false,
       alertMessage: '',
-      alertVariant: ''
+      alertVariant: '',
+
+      editor: new Editor({
+        autoFocus: true,
+        extensions: [
+          new Blockquote(),
+          new CodeBlock(),
+          new BulletList(),
+          new OrderedList(),
+          new ListItem(),
+          new Bold(),
+          new Code(),
+          new Italic(),
+          new Link(),
+          new Strike(),
+          new Underline(),
+          new Placeholder({
+            emptyEditorClass: 'is-editor-empty',
+            emptyNodeClass: 'is-empty',
+            emptyNodeText: 'Message #react.js',
+            showOnlyWhenEditable: true,
+            showOnlyCurrent: true
+          })
+        ],
+        onFocus: () => {
+          if (this.emojiPickerShow) {
+            this.emojiPickerShow = false
+          }
+        },
+        onUpdate: ({ getHTML }) => {
+          let div = document.createElement('div')
+          div.innerHTML = getHTML()
+
+          if (div.innerText.trim().length === 0) {
+            this.message = null
+          } else {
+            this.message = getHTML()
+          }
+        }
+      })
     }
   },
   methods: {
     ...mapActions('messages', ['createMessage', 'createPrivateMessage']),
+    toggleEmojiPicker() {
+      this.emojiPickerShow = !this.emojiPickerShow
+      this.emojiPickerFocused = !this.emojiPickerFocused
+
+      this.messageFormFocused = !this.messageFormFocused
+
+      if (this.messageFormFocused) {
+        this.editor.focus()
+      }
+    },
+    onFocus() {
+      this.messageFormFocused = true
+    },
+    onBlur() {
+      this.messageFormFocused = false
+    },
     async sendMessage() {
       try {
         if (this.isPrivate) {
@@ -278,12 +352,6 @@ export default {
         // Clear message
         this.editor.clearContent()
       }
-    },
-    onFocus() {
-      this.isFocusing = true
-    },
-    onBlur() {
-      this.isFocusing = false
     }
   },
   directives: {
@@ -299,41 +367,6 @@ export default {
         this.editor.extensions.options.placeholder.emptyNodeText = `${prefix} ${val.name}`
       }
     }
-  },
-  created() {
-    this.editor = new Editor({
-      autoFocus: true,
-      extensions: [
-        new Blockquote(),
-        new CodeBlock(),
-        new BulletList(),
-        new OrderedList(),
-        new ListItem(),
-        new Bold(),
-        new Code(),
-        new Italic(),
-        new Link(),
-        new Strike(),
-        new Underline(),
-        new Placeholder({
-          emptyEditorClass: 'is-editor-empty',
-          emptyNodeClass: 'is-empty',
-          emptyNodeText: `Message #${this.currentChannel.name}`,
-          showOnlyWhenEditable: true,
-          showOnlyCurrent: true
-        })
-      ],
-      onUpdate: ({ getHTML }) => {
-        let div = document.createElement('div')
-        div.innerHTML = getHTML()
-
-        if (div.innerText.trim().length === 0) {
-          this.message = null
-        } else {
-          this.message = getHTML()
-        }
-      }
-    })
   },
   beforeDestroy() {
     this.editor.destroy()
@@ -426,12 +459,8 @@ export default {
     }
   }
 
-  .notification-bar {
-    height: 24px;
-  }
-
   .message-input {
-    margin: 5px 0;
+    margin: 7px 0;
     padding: 4px 0 4px 10px;
   }
 
@@ -531,6 +560,10 @@ export default {
         font-size: 15px;
       }
     }
+  }
+
+  .notification-bar {
+    height: 24px;
   }
 }
 </style>
