@@ -1,0 +1,48 @@
+.menu {
+  min-width: 200px;
+  max-width: 360px;
+  border-radius: 6px;
+  background-color: rgb(248, 248, 248) !important;
+  box-shadow: 0 0 0 1px rgba(29, 28, 29, 0.13), 0 4px 12px 0 rgba(0, 0, 0, 0.12);
+
+  &.popover-upload {
+    min-width: 300px;
+
+    .icon-computer {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 12px;
+      width: 28px;
+      height: 28px;
+      color: rgba(29, 28, 29, 0.7);
+    }
+  }
+
+  .arrow {
+    visibility: hidden;
+  }
+
+  .popover-body {
+    padding: 12px 0;
+  }
+
+  .menu-item-header {
+    padding: 4px 24px;
+    color: rgba(29, 28, 29, 0.7);
+    font-weight: 400;
+    font-size: 13px;
+    line-height: 1.38463;
+  }
+
+  .menu-item-btn {
+    padding: 0 24px;
+    min-height: 28px;
+    text-align: left;
+
+    &:active:focus,
+    &:focus {
+      box-shadow: none !important;
+    }
+  }
+}

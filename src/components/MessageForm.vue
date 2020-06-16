@@ -3,12 +3,13 @@
     <div
       class="editor position-relative"
       :class="{ focus: messageFormFocused }"
-      @click="onFocus"
-      v-click-outside="onBlur"
+      @click="focusMessageForm"
     >
       <div class="message-input">
         <editor-content class="editor-content text-left" :editor="editor" />
       </div>
+
+      <div class="message-files"></div>
 
       <editor-menu-bar :editor="editor" v-slot="{ commands, isActive }">
         <div class="message-menubar position-relative">
@@ -119,30 +120,76 @@
             </b-button>
 
             <!-- Upload file -->
-            <b-button
-              v-b-tooltip.hover
-              title="Attach file"
-              variant="transparent"
-              class="btn-unstyled btn-file"
-            >
-              <b-icon-paperclip flip-h />
-            </b-button>
+            <div id="file-upload">
+              <b-button
+                id="popover-target-btn-upload"
+                v-b-tooltip.hover
+                title="Attach file"
+                variant="transparent"
+                class="btn-unstyled btn-file"
+                @click.stop="toggleFileUpload"
+              >
+                <b-icon-paperclip flip-h />
+              </b-button>
+
+              <b-popover
+                :show="fileUploadShow"
+                target="popover-target-btn-upload"
+                triggers="focus"
+                placement="topleft"
+                custom-class="popover-upload menu mt-0 border-0"
+                @hidden="hiddenFileUpload"
+              >
+                <p class="menu-item-header">Add a file from…</p>
+
+                <b-button
+                  block
+                  variant="light-gray"
+                  class="menu-item-btn border-0 d-flex align-items-center"
+                  @click="selectFile"
+                >
+                  <div class="icon-computer"><b-icon-display /></div>
+                  <span class="flex-fill">Your computer</span>
+                </b-button>
+              </b-popover>
+
+              <b-form-file
+                ref="file"
+                v-model="file"
+                plain
+                hidden
+                @input="uploadFile"
+              ></b-form-file>
+            </div>
 
             <!-- Emoji -->
-            <b-button
-              v-b-tooltip.hover
-              title="Emoji"
-              variant="transparent"
-              class="btn-unstyled btn-emoji"
-              @click.stop="toggleEmojiPicker"
-            >
-              <b-icon-emoji-smile class="icon-emoji-smile" />
+            <div id="emoji">
+              <b-button
+                id="tooltip-target-btn-emoji"
+                variant="transparent"
+                class="btn-unstyled btn-emoji"
+                :class="{ hovered: emojiPickerHovered }"
+                @click.stop="toggleEmojiPicker"
+                @mouseenter="emojiPickerHovered = true"
+                @mouseleave="emojiPickerHovered = false"
+              >
+                <b-icon-emoji-smile class="icon-emoji-smile" />
 
-              <b-iconstack class="icon-emoji-laughing">
-                <b-icon-circle-fill stacked variant="warning" />
-                <b-icon-emoji-laughing stacked />
-              </b-iconstack>
-            </b-button>
+                <b-iconstack class="icon-emoji-laughing">
+                  <b-icon-circle-fill stacked variant="warning" />
+                  <b-icon-emoji-laughing stacked />
+                </b-iconstack>
+              </b-button>
+
+              <b-tooltip
+                :show="emojiPickerHovered"
+                container="emoji"
+                target="tooltip-target-btn-emoji"
+                triggers="hover"
+              >
+                Emoji
+              </b-tooltip>
+            </div>
 
             <!-- Mention -->
             <b-button
@@ -175,8 +222,6 @@
       :autoFocus="emojiPickerFocused"
     />
 
-    <message-modal-upload />
-
     <app-alert
       :visible="alertShow"
       :message="alertMessage"
@@ -195,6 +240,7 @@ import {
   BIconstack,
   BIconListOl,
   BIconListUl,
+  BIconDisplay,
   BIconTypeBold,
   BIconPaperclip,
   BIconLink45deg,
@@ -222,9 +268,10 @@ import {
   OrderedList,
   Placeholder
 } from 'tiptap-extensions'
+import { v4 as uuidv4 } from 'uuid'
+import { storage } from '@/firebase.config'
 import ClickOutside from 'vue-click-outside'
 import AppAlert from '@/components/AppAlert'
-import MessageModalUpload from './MessageModalUpload'
 import MessageEmojiPicker from './MessageEmojiPicker'
 
 export default {
@@ -237,6 +284,7 @@ export default {
     BIconstack,
     BIconListOl,
     BIconListUl,
+    BIconDisplay,
     EditorMenuBar,
     EditorContent,
     BIconTypeBold,
@@ -250,7 +298,6 @@ export default {
     BIconEmojiLaughing,
     BIconBlockquoteLeft,
     BIconTypeStrikethrough,
-    MessageModalUpload,
     MessageEmojiPicker
   },
   computed: {
@@ -259,11 +306,18 @@ export default {
   },
   data() {
     return {
+      file: null,
       message: null,
       messageFormFocused: true,
 
       emojiPickerShow: false,
       emojiPickerFocused: false,
+      emojiPickerHovered: false,
+
+      // Create a root reference
+      storageRef: storage.ref(),
+      fileUploadShow: false,
+      fileUploadTask: null,
 
       alertShow: false,
       alertMessage: '',
@@ -291,9 +345,10 @@ export default {
             showOnlyCurrent: true
           })
         ],
-        onFocus: () => {
+        focusMessageForm: () => {
           if (this.emojiPickerShow) {
             this.emojiPickerShow = false
+            this.editor.focus()
           }
         },
         onUpdate: ({ getHTML }) => {
@@ -311,20 +366,100 @@ export default {
   },
   methods: {
     ...mapActions('messages', ['createMessage', 'createPrivateMessage']),
-    toggleEmojiPicker() {
-      this.emojiPickerShow = !this.emojiPickerShow
-      this.emojiPickerFocused = !this.emojiPickerFocused
+    selectFile() {
+      this.$refs.file.$el.click()
+    },
+    uploadFile() {
+      if (this.file === null) return false
 
-      this.messageFormFocused = !this.messageFormFocused
+      this.$emit('show-progress-bar')
 
-      if (this.messageFormFocused) {
+      const filePath = `${this.getFilePath()}/${uuidv4()}.jpg`
+
+      this.fileUploadTask = this.storageRef.child(filePath).put(this.file)
+
+      // Listen on file upload state change
+      this.fileUploadTask.on(
+        'state_changed',
+        snapshot => {
+          // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
+          var progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100
+
+          this.$emit('get-progress', { progress, fileName: this.file.name })
+        },
+        error => {
+          // Handle unsuccessful uploads
+          // A full list of error codes is available at
+          // https://firebase.google.com/docs/storage/web/handle-errors
+          switch (error.code) {
+            case 'storage/unauthorized':
+              // User doesn't have permission to access the object
+              console.log(1)
+              break
+            case 'storage/canceled':
+              // User canceled the upload
+              console.log(2)
+              break
+            case 'storage/invalid-argument':
+              console.log(3)
+              break
+            case 'storage/unknown':
+              // Unknown error occurred, inspect error.serverResponse
+              console.log(4)
+              break
+          }
+        },
+        () => {
+          this.$emit('upload-completed')
+          // Upload completed successfully, now we can get the download URL
+          this.fileUploadTask.snapshot.ref
+            .getDownloadURL()
+            .then(downloadURL => {
+              console.log('File available at', downloadURL)
+              this.$emit('hide-progress-bar')
+            })
+        }
+      )
+    },
+    getFilePath() {
+      return this.isPrivate ? `private/${this.currentChannel.id}` : 'public'
+    },
+    hiddenFileUpload() {
+      this.fileUploadShow = false
+
+      this.messageFormFocused = true
+      this.editor.focus()
+    },
+    toggleFileUpload() {
+      this.fileUploadShow = !this.fileUploadShow
+
+      if (this.fileUploadShow) {
+        this.messageFormFocused = false
+      }
+
+      if (!this.fileUploadShow) {
+        this.messageFormFocused = true
         this.editor.focus()
       }
     },
-    onFocus() {
+    toggleEmojiPicker() {
+      this.emojiPickerShow = !this.emojiPickerShow
+      this.emojiPickerFocused = !this.emojiPickerFocused
+      this.emojiPickerHovered = false
+
+      if (this.emojiPickerShow) {
+        this.messageFormFocused = false
+      }
+
+      if (!this.emojiPickerShow) {
+        this.messageFormFocused = true
+        this.editor.focus()
+      }
+    },
+    focusMessageForm() {
       this.messageFormFocused = true
     },
-    onBlur() {
+    blurMessageForm() {
       this.messageFormFocused = false
     },
     async sendMessage() {
@@ -422,7 +557,7 @@ export default {
     &.focus {
       &::after {
         position: absolute;
-        bottom: 41px;
+        bottom: 40px;
         left: 0;
         display: block;
         width: 100%;
@@ -494,6 +629,7 @@ export default {
     .btn {
       position: absolute;
       top: 0;
+      color: var(--dark-magenta);
 
       &.btn-send {
         right: 0;
@@ -518,12 +654,22 @@ export default {
 
       &.btn-file {
         right: 33px;
+
+        .b-icon {
+          font-size: 16px;
+        }
       }
 
       &.btn-emoji {
         right: 66px;
 
         &:hover {
+          background: transparent;
+        }
+
+        &.hovered {
+          background: rgba(29, 28, 29, 0.04);
+
           .icon-emoji-smile {
             display: none;
           }
@@ -547,17 +693,21 @@ export default {
         color: rgba(29, 28, 29, 0.7);
         opacity: 0.2;
         pointer-events: none;
+
+        &:hover {
+          background-color: rgba(29, 28, 29, 0.2);
+        }
       }
 
       &.btn-mention,
       &.btn-text {
         .b-icon {
-          font-size: 20px;
+          font-size: 19px;
         }
       }
 
       .b-icon {
-        font-size: 15px;
+        font-size: 14px;
       }
     }
   }

@@ -9,24 +9,26 @@
         <MemberList />
       </div>
 
-      <div class="content">
-        <b-card no-body class="flex-grow-1 border-0">
+      <div class="view">
+        <b-card no-body class="view-contents flex-grow-1 border-0">
           <!-- Card header -->
           <b-card-header
-            class="header"
+            class="view-header"
             header-tag="header"
             header-bg-variant="white"
           >
             <div class="channel-info">
               <div class="name-and-section">
-                <b-button variant="transparent" class="name btn-unstyled">
-                  <span class="icon-hash-or-circle">
-                    <b-icon-hash v-if="!isPrivate" />
-                    <b-icon-circle-fill v-else />
-                  </span>
+                <div>
+                  <b-button variant="transparent" class="name btn-unstyled">
+                    <span class="icon-hash-or-circle">
+                      <b-icon-hash v-if="!isPrivate" />
+                      <b-icon-circle-fill v-else />
+                    </span>
 
-                  <span class="name-dim">{{ currentChannel.name }}</span>
-                </b-button>
+                    <span class="name-dim">{{ currentChannel.name }}</span>
+                  </b-button>
+                </div>
 
                 <b-button
                   variant="transparent"
@@ -62,7 +64,7 @@
               variant="transparent"
               class="details btn-unstyled"
               v-b-tooltip.hover.bottom
-              title="Show channel details"
+              :title="`Show ${isPrivate ? 'conversation' : 'channel'} details`"
             >
               <span class="icon-circle">
                 <b-icon-exclamation-circle />
@@ -72,6 +74,7 @@
             </b-button>
           </b-card-header>
 
+          <!-- Jumbotron -->
           <b-jumbotron
             fluid
             container-fluid
@@ -79,17 +82,25 @@
             header-level="5"
             :lead="`This is a private conversation between you and ${currentChannel.name}.`"
             bg-variant="light"
-            class="banner"
-            v-if="isPrivate"
+            class="banner position-relative"
+            v-if="isPrivate && bannerShow"
           >
             <template v-slot:header>
               <div class="d-inline-flex">
-                <span class="icon-presense">
+                <span class="icon-presense text-dark-grayish-magenta">
                   <b-icon-hash v-if="!isPrivate" />
                   <b-icon-circle-fill v-else />
                 </span>
                 <h1 class="heading">{{ currentChannel.name }}</h1>
               </div>
+
+              <b-button
+                class="banner-close btn-unstyled text-dark-grayish-magenta"
+                variant="transparent"
+                @click="bannerShow = !bannerShow"
+              >
+                <b-icon-x />
+              </b-button>
             </template>
 
             <p class="text">Next, you could…</p>
@@ -97,8 +108,29 @@
             <b-button variant="primary" href="#">More Info</b-button>
           </b-jumbotron>
 
-          <div class="d-flex flex-column flex-grow-1">
-            <b-card-body body-class="p-0">
+          <div class="file-drag-drop-container d-flex flex-column flex-grow-1">
+            <b-card-body body-class="position-relative p-0">
+              <!-- File upload progress bar -->
+              <div class="file-upload-banner">
+                <b-progress
+                  v-if="progressBarShow"
+                  class="position-absolute"
+                  variant="success"
+                  :max="progress.max"
+                  :animated="progressBarAnimated"
+                  :value="progress.value"
+                >
+                </b-progress>
+
+                <div class="file-upload-banner-text">
+                  <p v-if="!progressBarCompleted">
+                    Uploading {{ fileName }} {{ progress.value }}%
+                  </p>
+
+                  <p v-else>Processing uploaded file…</p>
+                </div>
+              </div>
+
               <MessageList />
             </b-card-body>
 
@@ -108,7 +140,12 @@
               footer-class="p-0 border-0"
               footer-bg-variant="transparent"
             >
-              <MessageForm />
+              <message-form
+                @upload-completed="progressBarCompleted = true"
+                @get-progress="getTaskProgress"
+                @show-progress-bar="showProgressBar"
+                @hide-progress-bar="hideProgressBar"
+              />
             </b-card-footer>
           </div>
         </b-card>
@@ -125,6 +162,7 @@ import MessageForm from '@/components/MessageForm'
 import MemberList from '@/components/MemberList'
 import asyncDataStatus from '@/mixins/asyncDataStatus'
 import {
+  BIconX,
   BIconHash,
   BIconStar,
   BIconPerson,
@@ -142,6 +180,7 @@ export default {
     MessageList,
     MessageForm,
     MemberList,
+    BIconX,
     BIconHash,
     BIconStar,
     BIconPerson,
@@ -158,42 +197,61 @@ export default {
     await this.$store.dispatch('users/fetchUsers')
 
     this.asyncDataStatus_fetched()
+  },
+  data() {
+    return {
+      bannerShow: true,
+      fileName: null,
+
+      progress: { value: 0, max: 100 },
+      progressBarShow: false,
+      progressBarAnimated: false,
+      progressBarCompleted: false
+    }
+  },
+  methods: {
+    getTaskProgress({ progress, fileName }) {
+      if (progress === 0) {
+        this.fileName = fileName
+        this.progress.value = progress
+        this.progressBarAnimated = true
+
+        this.timer = setInterval(() => {
+          this.progress.value++
+        }, 200)
+      }
+
+      if (progress === 100) {
+        clearInterval(this.timer)
+
+        this.progress.value = progress
+      }
+    },
+    showProgressBar() {
+      this.progressBarShow = true
+    },
+    hideProgressBar() {
+      this.progressBarShow = false
+      this.progressBarAnimated = false
+      this.progressBarCompleted = false
+    }
   }
 }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .grid {
   display: grid;
+
   grid-template-rows: auto;
   grid-template-columns: 260px auto;
 }
 
 .sidebar {
-  .menu {
-    min-width: 200px;
-    max-width: 360px;
-    border-radius: 6px;
-    background-color: rgb(248, 248, 248);
-    box-shadow: 0 0 0 1px rgba(29, 28, 29, 0.13),
-      0 4px 12px 0 rgba(0, 0, 0, 0.12);
-
-    .arrow {
-      visibility: hidden;
-    }
-
-    .popover-body {
-      padding: 12px 0;
-    }
-
-    .btn-menu-item {
-      min-height: 28px;
-      text-align: left;
-    }
-  }
+  background: var(--blue);
 }
 
-.content {
+.view {
   display: flex;
   flex-direction: column;
 
@@ -202,7 +260,7 @@ export default {
     border: 0;
   }
 
-  .header {
+  .view-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -210,7 +268,7 @@ export default {
 
     .name-and-section {
       display: flex;
-      align-items: center;
+      align-items: baseline;
     }
 
     .metadata {
@@ -219,7 +277,7 @@ export default {
 
     .name {
       display: flex;
-      align-items: center;
+      align-items: baseline;
       font-weight: 900;
     }
 
@@ -229,8 +287,8 @@ export default {
 
     .icon-hash-or-circle {
       display: flex;
+      align-items: baseline;
       justify-content: center;
-      align-items: center;
       width: 20px;
       height: 20px;
 
@@ -311,9 +369,8 @@ export default {
       margin-right: 8px;
       margin-bottom: 28px;
       width: 20px;
-      color: rgb(97, 96, 97);
 
-      > .b-icon {
+      .b-icon {
         position: absolute;
         top: 50%;
         left: 50%;
@@ -330,10 +387,36 @@ export default {
       font-size: 40px;
     }
 
+    .banner-close {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 36px;
+      height: 36px;
+
+      &:hover {
+        background-color: rgba(29, 28, 29, 0.04);
+        color: var(--dark-magenta) !important;
+      }
+
+      &:active {
+        background-color: rgba(29, 28, 29, 0.13);
+      }
+
+      &:focus {
+        box-shadow: unset;
+      }
+
+      .b-icon {
+        width: 20px;
+        height: 20px;
+      }
+    }
+
     .lead {
-      font-size: 15px;
       margin-bottom: 2rem;
       font-weight: normal;
+      font-size: 15px;
     }
 
     .text {
@@ -341,6 +424,40 @@ export default {
       color: #616061;
       font-size: 13px;
     }
+  }
+
+  .file-upload-banner {
+    position: relative;
+    top: 7px;
+    left: 50%;
+    width: 300px;
+    height: 28px;
+    transform: translate3d(-50%, 0, 0);
+  }
+
+  .progress {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 14px;
+    background: #b2d5c9;
+  }
+
+  .file-upload-banner-text {
+    position: absolute;
+    top: 0;
+    left: 0;
+    overflow: hidden;
+    padding: 0 16px;
+    width: 100%;
+    height: 100%;
+    color: white;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 700;
+    font-size: 13px;
+    line-height: 28px;
   }
 }
 </style>
