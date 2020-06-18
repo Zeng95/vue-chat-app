@@ -1,5 +1,5 @@
 <template>
-  <div class="message-emoji-picker">
+  <div class="message-form-emoji-picker" v-click-outside="hide">
     <picker
       :autoFocus="autoFocus"
       title="Pick your emoji..."
@@ -10,21 +10,28 @@
 
 <script>
 import { Picker } from 'emoji-mart-vue'
+import ClickOutside from 'vue-click-outside'
 
 export default {
   name: 'MessageEmojiPicker',
+  directives: { ClickOutside },
+  components: { Picker },
   props: {
     autoFocus: {
       type: Boolean
     }
   },
-  components: { Picker }
+  methods: {
+    hide() {
+      this.$emit('hide')
+    }
+  }
 }
 </script>
 
 <style lang="scss" scoped>
-.message-emoji-picker {
-  position: absolute;
+.message-form-emoji-picker {
+  position: fixed;
   right: 15px;
   bottom: 67px;
 

@@ -1,24 +1,57 @@
 <template>
   <div class="message-form">
     <div
-      class="editor position-relative"
+      class="message-input position-relative"
       :class="{ focus: messageFormFocused }"
-      @click="focusMessageForm"
     >
-      <div class="message-input">
+      <div class="editor">
         <editor-content class="editor-content text-left" :editor="editor" />
       </div>
 
-      <div class="message-files"></div>
+      <div class="files">
+        <div class="multi-file-upload-gallery" v-if="files !== null">
+          <div class="multi-file-upload-container">
+            <div class="draft-image-file">
+              <b-img
+                rounded
+                v-bind="{ blank: true, width: '100%', height: '100%' }"
+                blank-color="rgb(248, 248, 248)"
+                class="draft-image-file-thumbnail w-100 h-100"
+                alt="Thumbnail Image"
+              />
+              <b-spinner
+                small
+                variant="primary"
+                label="Spinning"
+                style="border-width: 0.1rem;"
+              ></b-spinner>
+            </div>
+            <b-button
+              variant="transparent"
+              class="btn-unstyled multi-file-upload-btn-status multi-file-upload-btn-status-remove"
+              v-b-tooltip.hover
+              title="Remove file"
+            >
+              <b-icon-x-circle-fill class="icon-remove" v-if="false" />
+              <b-spinner
+                small
+                variant="primary"
+                label="Spinning"
+                style="border-width: 0.1rem;"
+              ></b-spinner>
+            </b-button>
+          </div>
+        </div>
+      </div>
 
       <editor-menu-bar :editor="editor" v-slot="{ commands, isActive }">
-        <div class="message-menubar position-relative">
+        <div class="menubar">
           <div class="toolbar h-100">
             <b-button
               v-b-tooltip.hover
               title="Bold"
               variant="transparent"
-              class="btn-unstyled"
+              class="btn-icon btn-unstyled"
               :class="{ 'is-active': isActive.bold() }"
               @click="commands.bold"
             >
@@ -28,7 +61,7 @@
               v-b-tooltip.hover
               title="Italic"
               variant="transparent"
-              class="btn-unstyled"
+              class="btn-icon btn-unstyled"
               :class="{ 'is-active': isActive.italic() }"
               @click="commands.italic"
             >
@@ -38,7 +71,7 @@
               v-b-tooltip.hover
               title="Strikethrough"
               variant="transparent"
-              class="btn-unstyled"
+              class="btn-icon btn-unstyled"
               :class="{ 'is-active': isActive.strike() }"
               @click="commands.strike"
             >
@@ -48,7 +81,7 @@
               v-b-tooltip.hover
               title="Code"
               variant="transparent"
-              class="btn-unstyled"
+              class="btn-icon btn-unstyled"
               :class="{ 'is-active': isActive.code() }"
               @click="commands.code"
             >
@@ -58,7 +91,7 @@
               v-b-tooltip.hover
               title="Link"
               variant="transparent"
-              class="btn-unstyled"
+              class="btn-icon btn-unstyled"
               :class="{ 'is-active': isActive.link() }"
               @click="commands.link"
             >
@@ -68,7 +101,7 @@
               v-b-tooltip.hover
               title="Ordered list"
               variant="transparent"
-              class="btn-unstyled"
+              class="btn-icon btn-unstyled"
               :class="{ 'is-active': isActive.bullet_list() }"
               @click="commands.bullet_list"
             >
@@ -78,7 +111,7 @@
               v-b-tooltip.hover
               title="Bulleted list"
               variant="transparent"
-              class="btn-unstyled"
+              class="btn-icon btn-unstyled"
               :class="{ 'is-active': isActive.ordered_list() }"
               @click="commands.ordered_list"
             >
@@ -88,7 +121,7 @@
               v-b-tooltip.hover
               title="Blockquote"
               variant="transparent"
-              class="btn-unstyled menubar__button"
+              class="btn-icon btn-unstyled"
               :class="{ 'is-active': isActive.blockquote() }"
               @click="commands.blockquote"
             >
@@ -98,7 +131,7 @@
               v-b-tooltip.hover
               title="Code block"
               variant="transparent"
-              class="btn-unstyled"
+              class="btn-icon btn-unstyled"
               :class="{ 'is-active': isActive.code_block() }"
               @click="commands.code_block"
             >
@@ -112,7 +145,7 @@
               v-b-tooltip.hover
               title="Send message"
               variant="transparent"
-              class="btn-unstyled btn-send"
+              class="btn-icon btn-send btn-unstyled"
               :disabled="message === null"
               @click="sendMessage"
             >
@@ -126,19 +159,19 @@
                 v-b-tooltip.hover
                 title="Attach file"
                 variant="transparent"
-                class="btn-unstyled btn-file"
+                class="btn-icon btn-file btn-unstyled"
                 @click.stop="toggleFileUpload"
               >
                 <b-icon-paperclip flip-h />
               </b-button>
 
               <b-popover
-                :show="fileUploadShow"
                 target="popover-target-btn-upload"
                 triggers="focus"
                 placement="topleft"
                 custom-class="popover-upload menu mt-0 border-0"
-                @hidden="hiddenFileUpload"
+                :show="fileUploadShow"
+                @hide="hideFileUpload"
               >
                 <p class="menu-item-header">Add a file from…</p>
 
@@ -155,7 +188,7 @@
 
               <b-form-file
                 ref="file"
-                v-model="file"
+                v-model="files"
                 plain
                 hidden
                 @input="uploadFile"
@@ -165,13 +198,11 @@
             <!-- Emoji -->
             <div id="emoji">
               <b-button
-                id="tooltip-target-btn-emoji"
+                v-b-tooltip.hover
+                title="Emoji"
                 variant="transparent"
-                class="btn-unstyled btn-emoji"
-                :class="{ hovered: emojiPickerHovered }"
+                class="btn-icon btn-emoji btn-unstyled"
                 @click.stop="toggleEmojiPicker"
-                @mouseenter="emojiPickerHovered = true"
-                @mouseleave="emojiPickerHovered = false"
               >
                 <b-icon-emoji-smile class="icon-emoji-smile" />
 
@@ -181,14 +212,11 @@
                 </b-iconstack>
               </b-button>
 
-              <b-tooltip
-                :show="emojiPickerHovered"
-                container="emoji"
-                target="tooltip-target-btn-emoji"
-                triggers="hover"
-              >
-                Emoji
-              </b-tooltip>
+              <message-form-emoji-picker
+                v-if="emojiPickerShow"
+                :autoFocus="emojiPickerFocused"
+                @hide="hideEmjoiPicker"
+              />
             </div>
 
             <!-- Mention -->
@@ -196,7 +224,7 @@
               v-b-tooltip.hover
               title="Mention someone"
               variant="transparent"
-              class="btn-unstyled btn-mention"
+              class="btn-icon btn-mention btn-unstyled"
             >
               <b-icon-at />
             </b-button>
@@ -206,7 +234,7 @@
               v-b-tooltip.hover
               title="Hide formatting"
               variant="transparent"
-              class="btn-unstyled btn-text"
+              class="btn-icon btn-text btn-unstyled"
             >
               <b-icon-type />
             </b-button>
@@ -216,11 +244,6 @@
     </div>
 
     <div class="notification-bar"></div>
-
-    <message-emoji-picker
-      v-if="emojiPickerShow"
-      :autoFocus="emojiPickerFocused"
-    />
 
     <app-alert
       :visible="alertShow"
@@ -249,6 +272,7 @@ import {
   BIconCursorFill,
   BIconEmojiSmile,
   BIconCircleFill,
+  BIconXCircleFill,
   BIconEmojiLaughing,
   BIconBlockquoteLeft,
   BIconTypeStrikethrough
@@ -271,8 +295,8 @@ import {
 import { v4 as uuidv4 } from 'uuid'
 import { storage } from '@/firebase.config'
 import ClickOutside from 'vue-click-outside'
-import AppAlert from '@/components/AppAlert'
-import MessageEmojiPicker from './MessageEmojiPicker'
+import AppAlert from './AppAlert'
+import MessageFormEmojiPicker from './MessageFormEmojiPicker'
 
 export default {
   name: 'MessageForm',
@@ -295,10 +319,11 @@ export default {
     BIconCursorFill,
     BIconEmojiSmile,
     BIconCircleFill,
+    BIconXCircleFill,
     BIconEmojiLaughing,
     BIconBlockquoteLeft,
     BIconTypeStrikethrough,
-    MessageEmojiPicker
+    MessageFormEmojiPicker
   },
   computed: {
     ...mapState({ isPrivate: state => state.channels.isPrivate }),
@@ -306,13 +331,13 @@ export default {
   },
   data() {
     return {
-      file: null,
+      files: null,
+      previewImages: null,
       message: null,
       messageFormFocused: true,
 
       emojiPickerShow: false,
       emojiPickerFocused: false,
-      emojiPickerHovered: false,
 
       // Create a root reference
       storageRef: storage.ref(),
@@ -370,13 +395,13 @@ export default {
       this.$refs.file.$el.click()
     },
     uploadFile() {
-      if (this.file === null) return false
-
+      this.readURL(this.files)
+      if (this.files !== null) return false
       this.$emit('show-progress-bar')
 
       const filePath = `${this.getFilePath()}/${uuidv4()}.jpg`
 
-      this.fileUploadTask = this.storageRef.child(filePath).put(this.file)
+      this.fileUploadTask = this.storageRef.child(filePath).put(this.files)
 
       // Listen on file upload state change
       this.fileUploadTask.on(
@@ -385,7 +410,7 @@ export default {
           // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
           var progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100
 
-          this.$emit('get-progress', { progress, fileName: this.file.name })
+          this.$emit('get-progress', { progress, fileName: this.files.name })
         },
         error => {
           // Handle unsuccessful uploads
@@ -421,41 +446,57 @@ export default {
         }
       )
     },
+    readURL(files) {
+      const reader = new FileReader()
+
+      reader.onload = e => (this.previewImages = e.target.result)
+      reader.readAsDataURL(files) // convert to base64 string
+    },
     getFilePath() {
       return this.isPrivate ? `private/${this.currentChannel.id}` : 'public'
     },
-    hiddenFileUpload() {
+
+    // File upload
+    toggleFileUpload() {
+      if (!this.fileUploadShow) {
+        this.showFileUpload()
+      } else {
+        this.hideFileUpload()
+      }
+    },
+    showFileUpload() {
+      this.fileUploadShow = true
+
+      this.messageFormFocused = false
+    },
+    hideFileUpload() {
       this.fileUploadShow = false
 
       this.messageFormFocused = true
       this.editor.focus()
     },
-    toggleFileUpload() {
-      this.fileUploadShow = !this.fileUploadShow
 
-      if (this.fileUploadShow) {
-        this.messageFormFocused = false
-      }
-
-      if (!this.fileUploadShow) {
-        this.messageFormFocused = true
-        this.editor.focus()
-      }
-    },
+    // Emoji picker
     toggleEmojiPicker() {
-      this.emojiPickerShow = !this.emojiPickerShow
-      this.emojiPickerFocused = !this.emojiPickerFocused
-      this.emojiPickerHovered = false
-
-      if (this.emojiPickerShow) {
-        this.messageFormFocused = false
-      }
-
       if (!this.emojiPickerShow) {
-        this.messageFormFocused = true
-        this.editor.focus()
+        this.showEmjoiPicker()
+      } else {
+        this.hideEmjoiPicker()
       }
     },
+    showEmjoiPicker() {
+      this.emojiPickerShow = true
+      this.emojiPickerFocused = true
+
+      this.messageFormFocused = false
+    },
+    hideEmjoiPicker() {
+      this.emojiPickerShow = false
+
+      this.messageFormFocused = true
+      this.editor.focus()
+    },
+
     focusMessageForm() {
       this.messageFormFocused = true
     },
@@ -514,16 +555,20 @@ export default {
   padding: 0 20px;
 
   .btn-unstyled {
+    padding: 0;
+    border: 0;
+  }
+
+  .btn-icon {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0;
     width: 32px;
     height: 32px;
-    border: 0;
     border-radius: 2px;
     color: rgba(29, 28, 29, 0.7);
     transition: all 0.2s;
+    pointer-events: none;
 
     &:hover {
       background: rgba(29, 28, 29, 0.04);
@@ -548,7 +593,7 @@ export default {
     }
   }
 
-  .editor {
+  .message-input {
     margin: 0 auto;
     width: 100%;
     border: 1px solid rgba(29, 28, 29, 0.7);
@@ -566,11 +611,11 @@ export default {
         content: '';
       }
 
-      .message-menubar {
+      .menubar {
         background-color: rgb(248, 248, 248);
       }
 
-      .btn-unstyled {
+      .btn-icon {
         opacity: 1;
         pointer-events: all;
       }
@@ -580,7 +625,6 @@ export default {
           background-color: rgba(29, 28, 29, 0.13);
           color: rgb(29, 28, 29);
           opacity: 1;
-          pointer-events: all;
         }
       }
     }
@@ -594,12 +638,61 @@ export default {
     }
   }
 
-  .message-input {
-    margin: 7px 0;
-    padding: 4px 0 4px 10px;
+  .editor {
+    margin: 7px 0 11px;
+    padding: 4px 0 0 10px;
   }
 
-  .message-menubar {
+  .files {
+    .multi-file-upload-gallery {
+      margin: 12px 0;
+      padding: 0 12px;
+    }
+
+    .multi-file-upload-container {
+      position: relative;
+      display: inline-block;
+    }
+
+    .draft-image-file {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 62px;
+      height: 62px;
+    }
+
+    .draft-image-file-thumbnail {
+      object-fit: cover;
+    }
+
+    .multi-file-upload-btn-status {
+      position: absolute;
+      top: -11px;
+      right: -11px;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: rgb(255, 255, 255);
+
+      &:hover {
+        .icon-remove {
+          color: var(--dark-magenta);
+        }
+      }
+
+      .icon-remove {
+        color: var(--dark-grayish-magenta);
+      }
+    }
+  }
+
+  .menubar {
+    position: relative;
     height: 40px;
     border-bottom-right-radius: 4px;
     border-bottom-left-radius: 4px;
@@ -612,9 +705,8 @@ export default {
     align-items: center;
     padding-left: 4px;
 
-    .btn-unstyled {
+    .btn-icon {
       opacity: 0.2;
-      pointer-events: none;
 
       &:not(:last-child) {
         margin-right: 1px;
@@ -664,10 +756,6 @@ export default {
         right: 66px;
 
         &:hover {
-          background: transparent;
-        }
-
-        &.hovered {
           background: rgba(29, 28, 29, 0.04);
 
           .icon-emoji-smile {
@@ -692,7 +780,6 @@ export default {
         right: 132px;
         color: rgba(29, 28, 29, 0.7);
         opacity: 0.2;
-        pointer-events: none;
 
         &:hover {
           background-color: rgba(29, 28, 29, 0.2);

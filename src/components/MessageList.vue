@@ -5,7 +5,7 @@
     </p>
 
     <div class="messages" v-else>
-      <div v-if="!isPrivate">
+      <div v-if="!isPrivate" class="message-pane-foreword">
         <!-- Channel name -->
         <h1>
           <span class="icon-hash">
@@ -32,19 +32,25 @@
         </div>
       </div>
 
-      <MessageItem
-        v-for="message in messages"
-        :key="message._id"
-        :message="message"
-      />
+      <div v-for="message in messages" :key="message.label">
+        <div>{{ message.label }}</div>
+
+        <message-item
+          v-for="(item, index) in message.items"
+          :key="item._id"
+          :message="item"
+          :prevMessage="index === 0 ? item : message.items[index - 1]"
+        />
+      </div>
     </div>
   </div>
 </template>
 
 <script>
 import { mapState, mapGetters, mapActions } from 'vuex'
-import MessageItem from './MessageItem'
 import { BIconHash } from 'bootstrap-vue'
+import moment from 'moment'
+import MessageItem from './MessageListItem'
 
 export default {
   name: 'MessageList',
@@ -53,24 +59,50 @@ export default {
     ...mapState({
       isPrivate: state => state.channels.isPrivate,
       messages: state => {
-        const itemsArr = Object.values(state.messages.items)
+        const itemsArr = Object.values(state.messages.items).sort((a, b) => {
+          return a.timestamp.seconds - b.timestamp.seconds
+        })
+        const newArr = []
 
-        // Use the slice() method to protect the original array from being modified
-        return itemsArr
-          .slice()
-          .sort((a, b) => a.timestamp.seconds - b.timestamp.seconds)
+        itemsArr.forEach(message => {
+          const milliseconds = message.timestamp.seconds * 1000
+          const date = moment(milliseconds).format('dddd,MMMM Do')
+          let labelAdded = false
+
+          newArr.forEach((item, index) => {
+            if (item.label === date) {
+              newArr[index].items.push(message)
+              labelAdded = true
+            }
+          })
+
+          if (!labelAdded) {
+            newArr.push({ label: date, items: [message] })
+          }
+        })
+
+        return newArr
       }
     }),
     ...mapGetters('channels', ['currentChannel'])
   },
   methods: {
-    ...mapActions('messages', ['fetchMessages', 'clearMessagesLocally'])
+    ...mapActions('messages', [
+      'fetchMessages',
+      'fetchPrivateMessages',
+      'clearMessagesLocally'
+    ])
   },
   watch: {
     currentChannel() {
       console.log('channel changed')
-      // this.clearMessagesLocally()
-      // this.fetchMessages()
+      this.clearMessagesLocally()
+
+      if (this.isPrivate) {
+        this.fetchPrivateMessages()
+      } else {
+        this.fetchMessages()
+      }
     }
   }
 }
@@ -79,6 +111,10 @@ export default {
 <style lang="scss" scoped>
 .message-list {
   margin-bottom: 15px;
+
+  .message-pane-foreword {
+    margin: 48px 20px 16px 20px;
+  }
 
   .message-group {
     overflow-y: scroll;
