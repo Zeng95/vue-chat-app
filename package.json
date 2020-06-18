@@ -36,7 +36,7 @@
     "eslint": "^7.2.0",
     "eslint-plugin-prettier": "^3.1.4",
     "eslint-plugin-vue": "^6.2.2",
-    "lint-staged": "^10.2.10",
+    "lint-staged": "^10.2.11",
     "mutationobserver-shim": "^0.3.7",
     "popper.js": "^1.16.0",
     "portal-vue": "^2.1.6",
