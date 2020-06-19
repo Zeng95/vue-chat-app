@@ -27,11 +27,11 @@ const actions = {
     commit('SET_CURRENT_CHANNEL', { id, name })
   },
 
-  createChannel({ state }, channel) {
+  createChannel({ state }, channelName) {
     return new Promise((resolve, reject) => {
       firestoreDB
         .collection('channels')
-        .add({ name: channel })
+        .add({ name: channelName })
         .then(() => resolve())
         .catch(error => reject(error))
     })

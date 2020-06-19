@@ -16,7 +16,7 @@
 
       <!-- Plus icon -->
       <b-button
-        id="popover-target-1"
+        id="popover"
         v-b-tooltip="{
           title: 'Add channels',
           trigger: 'hover',
@@ -29,25 +29,24 @@
       </b-button>
 
       <b-popover
-        target="popover-target-1"
-        triggers="focus"
+        target="popover"
+        triggers="click"
         placement="bottomright"
         boundary="viewport"
         custom-class="menu mt-0 border-0"
       >
-        <b-list-group tag="ul" flush>
-          <b-list-group-item tag="li" class="p-0 border-bottom-0">
-            <b-button
-              variant="light-gray"
-              class="btn-menu-item px-4 py-0 border-0 w-100 rounded-0"
-            >
+        <b-list-group tag="ul" flush class="menu-items">
+          <b-list-group-item tag="li" class="menu-item-li p-0 border-bottom-0">
+            <b-button block variant="light-gray" class="menu-item-btn border-0">
               Browse channels
             </b-button>
           </b-list-group-item>
-          <b-list-group-item tag="li" class="p-0">
+
+          <b-list-group-item tag="li" class="menu-item-li p-0">
             <b-button
+              block
               variant="light-gray"
-              class="btn-menu-item px-4 py-0 border-0 w-100 rounded-0"
+              class="menu-item-btn border-0"
               @click="modalShow = !modalShow"
             >
               Create a channel
@@ -63,7 +62,7 @@
             link-classes="sidebar-channel px-4 py-0"
             v-for="channel in channels"
             :key="channel._id"
-            :active="getActiveChannel(channel)"
+            :active="isActive(channel)"
             @click.stop="changeChannel(channel)"
           >
             <div class="d-flex align-items-center">
@@ -78,26 +77,9 @@
       </b-collapse>
     </b-navbar>
 
-    <b-modal
-      centered
-      v-model="modalShow"
-      title="Modal Title"
-      ok-title="Add"
-      @ok="addChannel"
-    >
-      <b-form class="form">
-        <b-form-group class="mb-0">
-          <b-form-input
-            required
-            v-model="newChannel"
-            placeholder="Channel name"
-            @keyup.enter="addChannel"
-          ></b-form-input>
-        </b-form-group>
-      </b-form>
-    </b-modal>
+    <modal-create :visible="modalShow" @hideModal="modalShow = !modalShow" />
 
-    <AppAlert
+    <app-alert
       :visible="alertShow"
       :message="alertMessage"
       :variant="alertVariant"
@@ -110,17 +92,23 @@
 import { mapState, mapGetters, mapActions } from 'vuex'
 import { BIconHash, BIconPlus, BIconCaretRightFill } from 'bootstrap-vue'
 import AppAlert from '@/components/AppAlert'
+import ModalCreate from './ChannelListModalCreate'
 
 export default {
   name: 'ChannelList',
-  components: { BIconHash, BIconPlus, BIconCaretRightFill, AppAlert },
+  components: {
+    BIconHash,
+    BIconPlus,
+    BIconCaretRightFill,
+    AppAlert,
+    ModalCreate
+  },
   computed: {
     ...mapState({ channels: state => Object.values(state.channels.items) }),
     ...mapGetters('channels', ['currentChannel'])
   },
   data() {
     return {
-      newChannel: '',
       modalShow: false,
 
       alertShow: false,
@@ -134,23 +122,7 @@ export default {
       'setCurrentChannel',
       'createChannel'
     ]),
-    async addChannel() {
-      try {
-        await this.createChannel(this.newChannel)
-
-        this.alertShow = true
-        this.alertMessage = 'Add successfully'
-        this.alertVariant = 'success'
-      } catch (error) {
-        this.alertShow = true
-        this.alertMessage = error.message
-        this.alertVariant = 'danger'
-      } finally {
-        this.modalShow = false
-        this.newChannel = ''
-      }
-    },
-    getActiveChannel(channel) {
+    isActive(channel) {
       return channel._id === this.currentChannel.id
     },
     changeChannel(channel) {

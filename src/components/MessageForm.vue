@@ -408,7 +408,7 @@ export default {
         'state_changed',
         snapshot => {
           // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
-          var progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100
+          let progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100
 
           this.$emit('get-progress', { progress, fileName: this.files.name })
         },
@@ -550,14 +550,9 @@ export default {
 }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .message-form {
   padding: 0 20px;
-
-  .btn-unstyled {
-    padding: 0;
-    border: 0;
-  }
 
   .btn-icon {
     display: flex;

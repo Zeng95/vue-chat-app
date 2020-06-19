@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 import { firestoreDB } from '@/firebase.config'
 
 // initial state
@@ -28,12 +27,15 @@ const actions = {
   createPrivateMessage({ rootState }, message) {
     return new Promise((resolve, reject) => {
       const messagesRef = firestoreDB.collection('privateMessages')
+      const userIds = rootState.channels.activeItem.id.split('/')
 
       message.userId = rootState.auth.authId
       message.channelId = rootState.channels.activeItem.id
 
       // Add a new document with an auto-generated id.
       messagesRef
+        .doc(rootState.auth.authId)
+        .collection(userIds[1])
         .add(message)
         .then(() => resolve())
         .catch(error => reject(error))
@@ -60,6 +62,36 @@ const actions = {
 
         resolve()
       })
+    })
+  },
+
+  fetchPrivateMessages({ rootState, commit }) {
+    const userIds = rootState.channels.activeItem.id.split('/')
+
+    return new Promise(resolve => {
+      firestoreDB
+        .collection('privateMessages')
+        .doc(rootState.auth.authId)
+        .collection(userIds[1])
+        .onSnapshot(snapshot => {
+          // The forEach method 是同步操作
+          snapshot.docChanges().forEach(change => {
+            if (change.type == 'added') {
+              const message = change.doc.data()
+              const currentChannelId = rootState.channels.activeItem.id
+              console.log(message.channelId, currentChannelId)
+              if (message.channelId === currentChannelId) {
+                commit(
+                  'SET_ITEM',
+                  { resource: 'messages', id: change.doc.id, item: message },
+                  { root: true }
+                )
+              }
+            }
+          })
+
+          resolve()
+        })
     })
   },
 

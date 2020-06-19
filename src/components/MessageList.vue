@@ -5,7 +5,7 @@
     </p>
 
     <div class="messages" v-else>
-      <div v-if="!isPrivate" class="message-pane-foreword">
+      <div v-if="!isPrivate" class="pane-foreword">
         <!-- Channel name -->
         <h1>
           <span class="icon-hash">
@@ -33,7 +33,19 @@
       </div>
 
       <div v-for="message in messages" :key="message.label">
-        <div>{{ message.label }}</div>
+        <div class="position-relative">
+          <b-button
+            pill
+            variant="transparent"
+            class="divider-label-pill btn-unstyled bg-white"
+          >
+            {{ message.label }}
+          </b-button>
+
+          <div class="divider">
+            <hr class="divider-line m-0" />
+          </div>
+        </div>
 
         <message-item
           v-for="(item, index) in message.items"
@@ -66,7 +78,7 @@ export default {
 
         itemsArr.forEach(message => {
           const milliseconds = message.timestamp.seconds * 1000
-          const date = moment(milliseconds).format('dddd,MMMM Do')
+          const date = moment(milliseconds).format('dddd, MMMM Do')
           let labelAdded = false
 
           newArr.forEach((item, index) => {
@@ -112,23 +124,38 @@ export default {
 .message-list {
   margin-bottom: 15px;
 
-  .message-pane-foreword {
+  .pane-foreword {
     margin: 48px 20px 16px 20px;
   }
 
-  .message-group {
-    overflow-y: scroll;
-    height: 65vh !important;
+  .divider-label-pill {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 100;
+    padding: 0 16px;
+    height: 28px;
+    border-radius: 24px;
+    box-shadow: 0 0 0 1px rgba(29, 28, 29, 0.13),
+      0 1px 3px 0 rgba(0, 0, 0, 0.08);
+    color: var(--dark-magenta);
+    font-weight: 700;
+    font-size: 13px;
+    transform: translate3d(-50%, -50%, 0);
   }
 
-  .fade-enter-active,
-  .fade-leave-active {
-    transition: opacity 0.5s;
+  .divider {
+    position: relative;
+    padding: 20px 0;
   }
 
-  .fade-enter,
-  .fade-leave-to {
-    opacity: 0;
+  .divider-line {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    left: 0;
+    border-top: 1px solid rgb(221, 221, 221);
+    transform: translate3d(0, -50%, 0);
   }
 }
 </style>

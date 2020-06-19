@@ -40,11 +40,12 @@ export default {
 <style lang="scss">
 @import '@/assets/scss/custom.scss';
 @import '@/assets/scss/modal.scss';
+@import '@/assets/scss/popover.scss';
 @import '~bootstrap/scss/bootstrap.scss';
 @import '~bootstrap-vue/src/index.scss';
 
 html {
-  font-size: 0.875rem;
+  font-size: 15px;
 
   -webkit-font-smoothing: antialiased;
 }
@@ -63,6 +64,11 @@ body {
 
 p {
   margin: 0;
+}
+
+.btn-unstyled {
+  padding: 0;
+  border: 0;
 }
 
 #nprogress .bar {

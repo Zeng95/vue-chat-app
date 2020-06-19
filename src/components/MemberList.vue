@@ -32,17 +32,15 @@
       <b-collapse id="collapse-members" is-nav :visible="true">
         <b-navbar-nav>
           <b-nav-item
-            link-classes="sidebar-channel d-flex align-items-center justify-content-between px-4 py-0"
+            link-classes="sidebar-channel px-4 py-0"
             v-for="user in filteredUsers"
             :key="user._id"
-            :active="getActiveChannel(user)"
+            :active="isActive(user)"
             @click.stop="changeChanel(user)"
           >
-            <div class="d-flex">
+            <div class="d-flex align-items-center">
               <span class="icon-circle">
-                <b-icon-circle-fill
-                  :variant="getVariantByStatus(user.status)"
-                />
+                <b-icon-circle />
               </span>
               <span class="name">{{ user.username }}</span>
             </div>
@@ -69,7 +67,7 @@
 
 <script>
 import { mapState, mapGetters, mapActions } from 'vuex'
-import { BIconPlus, BIconCircleFill, BIconCaretRightFill } from 'bootstrap-vue'
+import { BIconPlus, BIconCircle, BIconCaretRightFill } from 'bootstrap-vue'
 import AppAlert from '@/components/AppAlert'
 import { realtimeDB } from '@/firebase.config'
 
@@ -77,7 +75,7 @@ export default {
   name: 'MemberList',
   components: {
     BIconPlus,
-    BIconCircleFill,
+    BIconCircle,
     BIconCaretRightFill,
     AppAlert
   },
@@ -128,13 +126,8 @@ export default {
         }
       })
     },
-    getVariantByStatus(status) {
-      return status === 'online' ? 'success' : 'warning'
-    },
-    getChannelId(userId) {
-      return userId < this.authId
-        ? `${userId}/${this.authId}`
-        : `${this.authId}/${userId}`
+    isActive(user) {
+      return this.getChannelId(user._id) === this.currentChannel.id
     },
     changeChanel(user) {
       const channelId = this.getChannelId(user._id)
@@ -143,10 +136,12 @@ export default {
       this.setPrivate(true)
       this.setCurrentChannel(channel)
     },
-    getActiveChannel(user) {
-      const channelId = this.getChannelId(user._id)
-
-      return channelId === this.currentChannel.id
+    getChannelId(userId) {
+      // smallerUserId < biggerUserId
+      return `${this.authId}/${userId}`
+    },
+    getVariantByStatus(status) {
+      return status === 'online' ? 'success' : 'warning'
     }
   },
   created() {
@@ -166,8 +161,10 @@ export default {
   }
 
   .sidebar-channel {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     height: 28px;
-    line-height: 28px;
   }
 
   .nav-link {
@@ -212,15 +209,26 @@ export default {
   }
 
   .icon-circle {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     width: 20px;
-    height: 28px;
+    height: 20px;
 
     > .b-icon {
       font-size: 0.65rem;
     }
+  }
+
+  .name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: 1;
+  }
+
+  .status {
+    line-height: 1;
   }
 }
 </style>

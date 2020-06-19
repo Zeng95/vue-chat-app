@@ -68,11 +68,12 @@ const actions = {
       auth
         .createUserWithEmailAndPassword(email, password)
         .then(result => {
+          console.log(result)
           const usersRef = firestoreDB.collection('users')
 
           const user = result.user
           const userId = result.user.uid
-
+          console.log(userId)
           usersRef
             .doc(userId)
             .get()

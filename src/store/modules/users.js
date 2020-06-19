@@ -37,7 +37,10 @@ const actions = {
         .doc(userId)
         .set(newUser)
         .then(() => resolve())
-        .catch(error => reject(error))
+        .catch(error => {
+          console.log(error)
+          reject(error)
+        })
     })
   },
 
