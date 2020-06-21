@@ -1,8 +1,8 @@
 <template>
-  <div v-if="asyncDataStatus_ready" class="d-flex flex-column vh-100 vw-100">
+  <div v-if="asyncDataStatus_ready" class="chat">
     <ChatNavBar />
 
-    <div class="grid flex-grow-1">
+    <div class="grid">
       <div class="sidebar">
         <ChannelList />
 
@@ -10,7 +10,7 @@
       </div>
 
       <div class="view">
-        <b-card no-body class="view-contents flex-grow-1 border-0">
+        <b-card no-body class="view-contents border-0 h-100">
           <!-- Card header -->
           <b-card-header
             class="view-header"
@@ -74,80 +74,78 @@
             </b-button>
           </b-card-header>
 
-          <!-- Jumbotron -->
-          <b-jumbotron
-            fluid
-            container-fluid
-            header-tag="div"
-            header-level="5"
-            :lead="`This is a private conversation between you and ${currentChannel.name}.`"
-            bg-variant="light"
-            class="banner position-relative"
-            v-if="isPrivate && bannerShow"
-          >
-            <template v-slot:header>
-              <div class="d-inline-flex">
-                <span class="icon-presense text-dark-grayish-magenta">
-                  <b-icon-hash v-if="!isPrivate" />
-                  <b-icon-circle-fill v-else />
-                </span>
-                <h1 class="heading">{{ currentChannel.name }}</h1>
-              </div>
-
-              <b-button
-                class="banner-close btn-unstyled text-dark-grayish-magenta"
-                variant="transparent"
-                @click="bannerShow = !bannerShow"
-              >
-                <b-icon-x />
-              </b-button>
-            </template>
-
-            <p class="text">Next, you could…</p>
-
-            <b-button variant="primary" href="#">More Info</b-button>
-          </b-jumbotron>
-
-          <div class="file-drag-drop-container d-flex flex-column flex-grow-1">
-            <b-card-body body-class="position-relative p-0">
-              <!-- File upload progress bar -->
-              <div class="file-upload-banner">
-                <b-progress
-                  v-if="progressBarShow"
-                  class="position-absolute"
-                  variant="success"
-                  :max="progress.max"
-                  :animated="progressBarAnimated"
-                  :value="progress.value"
-                >
-                </b-progress>
-
-                <div class="file-upload-banner-text">
-                  <p v-if="!progressBarCompleted">
-                    Uploading {{ fileName }} {{ progress.value }}%
-                  </p>
-
-                  <p v-else>Processing uploaded file…</p>
-                </div>
-              </div>
-
-              <MessageList />
-            </b-card-body>
-
-            <b-card-footer
-              class="footer"
-              footer-tag="footer"
-              footer-class="p-0 border-0"
-              footer-bg-variant="transparent"
+          <b-card-body body-class="position-relative p-0 overflow-auto">
+            <!-- Jumbotron -->
+            <b-jumbotron
+              fluid
+              container-fluid
+              header-tag="div"
+              header-level="5"
+              :lead="`This is a private conversation between you and ${currentChannel.name}.`"
+              bg-variant="light"
+              class="banner position-relative"
+              v-if="isPrivate && bannerShow"
             >
-              <message-form
-                @upload-completed="progressBarCompleted = true"
-                @get-progress="getTaskProgress"
-                @show-progress-bar="showProgressBar"
-                @hide-progress-bar="hideProgressBar"
-              />
-            </b-card-footer>
-          </div>
+              <template v-slot:header>
+                <div class="d-inline-flex">
+                  <span class="icon-presense text-dark-grayish-magenta">
+                    <b-icon-hash v-if="!isPrivate" />
+                    <b-icon-circle-fill v-else />
+                  </span>
+                  <h1 class="heading">{{ currentChannel.name }}</h1>
+                </div>
+
+                <b-button
+                  class="banner-close btn-unstyled text-dark-grayish-magenta"
+                  variant="transparent"
+                  @click="bannerShow = !bannerShow"
+                >
+                  <b-icon-x />
+                </b-button>
+              </template>
+
+              <p class="text">Next, you could…</p>
+
+              <b-button variant="primary" href="#">More Info</b-button>
+            </b-jumbotron>
+
+            <!-- File upload progress bar -->
+            <div class="file-upload-banner">
+              <b-progress
+                v-if="progressBarShow"
+                class="position-absolute"
+                variant="success"
+                :max="progress.max"
+                :animated="progressBarAnimated"
+                :value="progress.value"
+              >
+              </b-progress>
+
+              <div class="file-upload-banner-text">
+                <p v-if="!progressBarCompleted">
+                  Uploading {{ fileName }} {{ progress.value }}%
+                </p>
+
+                <p v-else>Processing uploaded file…</p>
+              </div>
+            </div>
+
+            <MessageList />
+          </b-card-body>
+
+          <b-card-footer
+            class="footer"
+            footer-tag="footer"
+            footer-class="p-0 border-0"
+            footer-bg-variant="transparent"
+          >
+            <message-form
+              @upload-completed="progressBarCompleted = true"
+              @get-progress="getTaskProgress"
+              @show-progress-bar="showProgressBar"
+              @hide-progress-bar="hideProgressBar"
+            />
+          </b-card-footer>
         </b-card>
       </div>
     </div>
@@ -240,224 +238,225 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.grid {
-  display: grid;
+.chat {
+  .grid {
+    display: grid;
 
-  grid-template-rows: auto;
-  grid-template-columns: 260px auto;
-}
-
-.sidebar {
-  background: var(--blue);
-}
-
-.view {
-  display: flex;
-  flex-direction: column;
-
-  .btn-unstyled {
-    padding: 0;
-    border: 0;
+    grid-template-rows: auto;
+    grid-template-columns: 260px auto;
   }
 
-  .view-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    height: 64px;
+  .sidebar {
+    background: var(--blue);
+  }
 
-    .name-and-section {
-      display: flex;
-      align-items: baseline;
+  .view {
+    height: calc(100vh - 50px);
+
+    .btn-unstyled {
+      padding: 0;
+      border: 0;
     }
 
-    .metadata {
-      display: flex;
-    }
-
-    .name {
-      display: flex;
-      align-items: baseline;
-      font-weight: 900;
-    }
-
-    .name-dim {
-      color: rgba(29, 28, 29, 0.7);
-    }
-
-    .icon-hash-or-circle {
-      display: flex;
-      align-items: baseline;
-      justify-content: center;
-      width: 20px;
-      height: 20px;
-
-      > .b-icon {
-        width: 10px;
-        height: 10px;
-      }
-    }
-
-    .section-selector {
+    .view-header {
       display: flex;
       align-items: center;
-      justify-content: center;
-      margin-left: 4px;
-      width: 20px;
-      height: 20px;
-      border: thin solid transparent;
-      color: rgba(29, 28, 29, 0.7);
-      transition: background-color 0.16s cubic-bezier(0.36, 0.19, 0.29, 1),
-        color 0.16s cubic-bezier(0.36, 0.19, 0.29, 1);
+      justify-content: space-between;
+      height: 64px;
 
-      &:hover {
-        background-color: rgba(29, 28, 29, 0.04);
+      .name-and-section {
+        display: flex;
+        align-items: baseline;
       }
 
-      > .b-icon {
-        width: 13px;
-        height: 13px;
-      }
-    }
-
-    .info-members {
-      > .b-icon {
-        width: 13px;
-      }
-    }
-
-    .info-sep {
-      margin: 0 6px;
-      color: rgba(29, 28, 29, 0.5);
-      opacity: 0.5;
-    }
-
-    .info-topic {
-      color: rgba(29, 28, 29, 0.7);
-    }
-
-    .details {
-      display: flex;
-      align-items: center;
-      padding: 8px;
-      color: rgba(29, 28, 29, 0.7);
-      font-weight: 700;
-      transition: all 0.2s;
-
-      &:hover {
-        background-color: rgba(29, 28, 29, 0.04);
-        color: rgb(29, 28, 29);
+      .metadata {
+        display: flex;
       }
 
-      .icon-circle {
+      .name {
+        display: flex;
+        align-items: baseline;
+        font-weight: 900;
+      }
+
+      .name-dim {
+        color: rgba(29, 28, 29, 0.7);
+      }
+
+      .icon-hash-or-circle {
+        display: flex;
+        align-items: baseline;
+        justify-content: center;
         width: 20px;
         height: 20px;
+
+        > .b-icon {
+          width: 10px;
+          height: 10px;
+        }
       }
 
-      .btn-text {
-        margin-left: 8px;
+      .section-selector {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-left: 4px;
+        width: 20px;
+        height: 20px;
+        border: thin solid transparent;
+        color: rgba(29, 28, 29, 0.7);
+        transition: background-color 0.16s cubic-bezier(0.36, 0.19, 0.29, 1),
+          color 0.16s cubic-bezier(0.36, 0.19, 0.29, 1);
+
+        &:hover {
+          background-color: rgba(29, 28, 29, 0.04);
+        }
+
+        > .b-icon {
+          width: 13px;
+          height: 13px;
+        }
+      }
+
+      .info-members {
+        > .b-icon {
+          width: 13px;
+        }
+      }
+
+      .info-sep {
+        margin: 0 6px;
+        color: rgba(29, 28, 29, 0.5);
+        opacity: 0.5;
+      }
+
+      .info-topic {
+        color: rgba(29, 28, 29, 0.7);
+      }
+
+      .details {
+        display: flex;
+        align-items: center;
+        padding: 8px;
+        color: rgba(29, 28, 29, 0.7);
+        font-weight: 700;
+        transition: all 0.2s;
+
+        &:hover {
+          background-color: rgba(29, 28, 29, 0.04);
+          color: rgb(29, 28, 29);
+        }
+
+        .icon-circle {
+          width: 20px;
+          height: 20px;
+        }
+
+        .btn-text {
+          margin-left: 8px;
+        }
       }
     }
-  }
 
-  .banner {
-    padding: 40px 56px 32px;
-    border-bottom: 1px solid rgba(29, 28, 29, 0.13);
+    .banner {
+      padding: 40px 56px 32px;
+      border-bottom: 1px solid rgba(29, 28, 29, 0.13);
 
-    .icon-presense {
-      position: relative;
-      margin-right: 8px;
-      margin-bottom: 28px;
-      width: 20px;
+      .icon-presense {
+        position: relative;
+        margin-right: 8px;
+        margin-bottom: 28px;
+        width: 20px;
 
-      .b-icon {
+        .b-icon {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 1rem;
+          height: 1rem;
+          transform: translate3d(-50%, -50%, 0);
+        }
+      }
+
+      .heading {
+        margin-bottom: 28px;
+        letter-spacing: -0.25px;
+        font-weight: 900;
+        font-size: 40px;
+      }
+
+      .banner-close {
         position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 1rem;
-        height: 1rem;
-        transform: translate3d(-50%, -50%, 0);
+        top: 12px;
+        right: 12px;
+        width: 36px;
+        height: 36px;
+
+        &:hover {
+          background-color: rgba(29, 28, 29, 0.04);
+          color: var(--dark-magenta) !important;
+        }
+
+        &:active {
+          background-color: rgba(29, 28, 29, 0.13);
+        }
+
+        &:focus {
+          box-shadow: unset;
+        }
+
+        .b-icon {
+          width: 20px;
+          height: 20px;
+        }
+      }
+
+      .lead {
+        margin-bottom: 2rem;
+        font-weight: normal;
+        font-size: 15px;
+      }
+
+      .text {
+        margin-bottom: 12px;
+        color: #616061;
+        font-size: 13px;
       }
     }
 
-    .heading {
-      margin-bottom: 28px;
-      letter-spacing: -0.25px;
-      font-weight: 900;
-      font-size: 40px;
+    .file-upload-banner {
+      position: relative;
+      top: 7px;
+      left: 50%;
+      width: 300px;
+      height: 28px;
+      transform: translate3d(-50%, 0, 0);
     }
 
-    .banner-close {
+    .progress {
       position: absolute;
-      top: 12px;
-      right: 12px;
-      width: 36px;
-      height: 36px;
-
-      &:hover {
-        background-color: rgba(29, 28, 29, 0.04);
-        color: var(--dark-magenta) !important;
-      }
-
-      &:active {
-        background-color: rgba(29, 28, 29, 0.13);
-      }
-
-      &:focus {
-        box-shadow: unset;
-      }
-
-      .b-icon {
-        width: 20px;
-        height: 20px;
-      }
+      width: 100%;
+      height: 100%;
+      border-radius: 14px;
+      background: #b2d5c9;
     }
 
-    .lead {
-      margin-bottom: 2rem;
-      font-weight: normal;
-      font-size: 15px;
-    }
-
-    .text {
-      margin-bottom: 12px;
-      color: #616061;
+    .file-upload-banner-text {
+      position: absolute;
+      top: 0;
+      left: 0;
+      overflow: hidden;
+      padding: 0 16px;
+      width: 100%;
+      height: 100%;
+      color: white;
+      text-align: center;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-weight: 700;
       font-size: 13px;
+      line-height: 28px;
     }
-  }
-
-  .file-upload-banner {
-    position: relative;
-    top: 7px;
-    left: 50%;
-    width: 300px;
-    height: 28px;
-    transform: translate3d(-50%, 0, 0);
-  }
-
-  .progress {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    border-radius: 14px;
-    background: #b2d5c9;
-  }
-
-  .file-upload-banner-text {
-    position: absolute;
-    top: 0;
-    left: 0;
-    overflow: hidden;
-    padding: 0 16px;
-    width: 100%;
-    height: 100%;
-    color: white;
-    text-align: center;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-weight: 700;
-    font-size: 13px;
-    line-height: 28px;
   }
 }
 </style>
