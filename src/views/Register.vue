@@ -79,12 +79,12 @@
             placeholder="Email"
             :state="validateState('email')"
             v-model="$v.form.email.$model"
-            @focus="inputFocus"
+            @focus="focusOnEmail"
           ></b-form-input>
         </b-form-group>
 
         <transition name="slide-down">
-          <div v-if="isInputFocusing">
+          <div v-if="inputFocusing">
             <!-- 密码 -->
             <b-form-group class="mb-4" invalid-feedback="At least 6 characters">
               <b-form-input
@@ -164,7 +164,7 @@ export default {
         password: '',
         username: ''
       },
-      isInputFocusing: false,
+      inputFocusing: false,
 
       alertShow: false,
       alertMessage: '',
@@ -195,6 +195,9 @@ export default {
       'signInWithGithub',
       'signUpWithEmailAndPwd'
     ]),
+    focusOnEmail() {
+      this.inputFocusing = true
+    },
     validateState(name) {
       const { $dirty, $error } = this.$v.form[name]
 
@@ -203,7 +206,61 @@ export default {
     navigateToChat() {
       this.$router.push({ name: 'Chat' })
     },
-    // 邮箱和密码登录
+
+    async loginWithTwitter() {
+      try {
+        this.$bvToast.show('register-toast')
+        await this.signInWithTwitter()
+
+        this.alertShow = true
+        this.alertMessage = 'Login successfully.'
+        this.alertVariant = 'success'
+
+        this.navigateToChat()
+      } catch (error) {
+        this.alertShow = true
+        this.alertMessage = error.message
+        this.alertVariant = 'danger'
+      } finally {
+        this.$bvToast.hide('register-toast')
+      }
+    },
+    async loginWithGoogle() {
+      try {
+        this.$bvToast.show('register-toast')
+        await this.signInWithGoogle()
+
+        this.alertShow = true
+        this.alertMessage = 'Login successfully.'
+        this.alertVariant = 'success'
+
+        this.navigateToChat()
+      } catch (error) {
+        this.alertShow = true
+        this.alertMessage = error.message
+        this.alertVariant = 'danger'
+      } finally {
+        this.$bvToast.hide('register-toast')
+      }
+    },
+    async loginWithGithub() {
+      try {
+        this.$bvToast.show('register-toast')
+        await this.signInWithGithub()
+
+        this.alertShow = true
+        this.alertMessage = 'Login successfully.'
+        this.alertVariant = 'success'
+
+        this.navigateToChat()
+      } catch (error) {
+        this.alertShow = true
+        this.alertMessage = error.message
+        this.alertVariant = 'danger'
+      } finally {
+        this.$bvToast.hide('register-toast')
+      }
+    },
     async registerWithEmailAndPwd() {
       try {
         this.$v.form.$touch()
@@ -221,6 +278,10 @@ export default {
           username: this.form.username
         })
 
+        this.alertShow = true
+        this.alertMessage = 'Register successfully.'
+        this.alertVariant = 'success'
+
         this.navigateToChat()
       } catch (error) {
         this.alertShow = true
@@ -230,58 +291,6 @@ export default {
         this.loadingShow = false
         this.$bvToast.hide('register-toast')
       }
-    },
-    // Twitter 账户登录
-    async loginWithTwitter() {
-      try {
-        this.$bvToast.show('register-toast')
-
-        await this.signInWithTwitter()
-
-        this.$bvToast.hide('register-toast')
-        this.navigateToChat()
-      } catch (error) {
-        this.$bvToast.hide('register-toast')
-
-        this.alertShow = true
-        this.alertMessage = error.message
-        this.alertVariant = 'danger'
-      }
-    },
-    // Google 账户登录
-    async loginWithGoogle() {
-      try {
-        this.$bvToast.show('register-toast')
-        await this.signInWithGoogle()
-
-        this.$bvToast.hide('register-toast')
-        this.navigateToChat()
-      } catch (error) {
-        this.$bvToast.hide('register-toast')
-
-        this.alertShow = true
-        this.alertMessage = error.message
-        this.alertVariant = 'danger'
-      }
-    },
-    // Github 账户登录
-    async loginWithGithub() {
-      try {
-        this.$bvToast.show('register-toast')
-        await this.signInWithGithub()
-
-        this.$bvToast.hide('register-toast')
-        this.navigateToChat()
-      } catch (error) {
-        this.$bvToast.hide('register-toast')
-
-        this.alertShow = true
-        this.alertMessage = error.message
-        this.alertVariant = 'danger'
-      }
-    },
-    inputFocus() {
-      this.isInputFocusing = true
     }
   },
   beforeCreate() {
@@ -296,164 +305,164 @@ export default {
     center/cover;
   color: #0e101a;
   font-family: Inter;
-}
 
-.lead {
-  margin-bottom: 0;
-}
-
-.btn-login {
-  position: absolute;
-  top: 25px;
-  right: 24px;
-  padding: 0;
-  min-width: 70px;
-  height: 32px;
-  border: 0;
-  font-weight: 700;
-  line-height: 32px;
-
-  &:focus {
-    box-shadow: unset;
+  .lead {
+    margin-bottom: 0;
   }
 
-  a {
-    &:hover {
-      text-decoration: none;
+  .btn-login {
+    position: absolute;
+    top: 25px;
+    right: 24px;
+    padding: 0;
+    min-width: 70px;
+    height: 32px;
+    border: 0;
+    font-weight: 700;
+    line-height: 32px;
+
+    &:focus {
+      box-shadow: unset;
+    }
+
+    a {
+      &:hover {
+        text-decoration: none;
+      }
     }
   }
-}
 
-.card {
-  width: 520px;
-  border-radius: 8px;
-  box-shadow: 0 5px 5px 0 rgba(154, 160, 185, 0.05),
-    0 5px 30px 0 rgba(166, 173, 201, 0.22);
+  .card {
+    width: 520px;
+    border-radius: 8px;
+    box-shadow: 0 5px 5px 0 rgba(154, 160, 185, 0.05),
+      0 5px 30px 0 rgba(166, 173, 201, 0.22);
 
-  .card-header {
-    width: 100%;
-    height: 6px;
-    border-radius: 8px 8px 0 0;
-    background-image: linear-gradient(-71deg, #4c7af1, #15c39a 95%);
-  }
+    .card-header {
+      width: 100%;
+      height: 6px;
+      border-radius: 8px 8px 0 0;
+      background-image: linear-gradient(-71deg, #4c7af1, #15c39a 95%);
+    }
 
-  .card-body {
-    padding-top: 24px;
-    padding-bottom: 24px;
-  }
+    .card-body {
+      padding-top: 24px;
+      padding-bottom: 24px;
+    }
 
-  .card-title {
-    color: #2b2d38;
-    text-align: center;
-    font-weight: 600;
-    line-height: 40px;
-  }
+    .card-title {
+      color: #2b2d38;
+      text-align: center;
+      font-weight: 600;
+      line-height: 40px;
+    }
 
-  .card-subtitle {
-    font-size: 16px;
-    line-height: 28px;
-  }
+    .card-subtitle {
+      font-size: 16px;
+      line-height: 28px;
+    }
 
-  .additional {
-    display: flex;
-    margin-top: 24px;
-
-    .btn {
+    .additional {
       display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 48px;
-      background: #f0f2fc;
-      color: #4d536e;
+      margin-top: 24px;
+
+      .btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 48px;
+        background: #f0f2fc;
+        color: #4d536e;
+        transition: all 0.2s;
+
+        &:hover {
+          background: #f9faff;
+        }
+
+        &:focus {
+          box-shadow: none;
+        }
+      }
+
+      .btn-unstyled {
+        border: 0;
+      }
+
+      .logo {
+        margin-right: 8px;
+        width: 16px;
+        height: 16px;
+      }
+    }
+
+    .or {
+      display: block;
+      margin: 16px 0;
+      color: #c6cbde;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 0.9px;
+      font-weight: 700;
+      font-size: 11px;
+      line-height: 16px;
+    }
+
+    .form {
+      .email,
+      .password,
+      .username {
+        padding-top: 12px;
+        padding-bottom: 12px;
+        height: 48px;
+        border: 1px solid #e4e6f2;
+        letter-spacing: 0.2px;
+
+        &::placeholder {
+          color: #c6cbde;
+        }
+
+        &.is-invalid {
+          border-color: #dc3545;
+        }
+
+        &.is-valid {
+          border-color: #28a745;
+        }
+      }
+
+      ::v-deep.invalid-feedback {
+        font-size: 1rem;
+      }
+    }
+
+    .btn-register {
+      height: 50px;
+      border: 0;
+      font-size: 18px;
       transition: all 0.2s;
 
-      &:hover {
-        background: #f9faff;
+      &:disabled {
+        cursor: not-allowed;
       }
 
-      &:focus {
-        box-shadow: none;
+      .spinner-border {
+        width: 1.5rem;
+        height: 1.5rem;
+        border-width: 0.15em;
       }
-    }
-
-    .btn-unstyled {
-      border: 0;
-    }
-
-    .logo {
-      margin-right: 8px;
-      width: 16px;
-      height: 16px;
     }
   }
 
-  .or {
-    display: block;
-    margin: 16px 0;
-    color: #c6cbde;
-    text-align: center;
-    text-transform: uppercase;
-    letter-spacing: 0.9px;
-    font-weight: 700;
-    font-size: 11px;
-    line-height: 16px;
+  .slide-down-enter-active,
+  .slide-down-leave-active {
+    overflow: hidden;
+    height: 117px;
+    transition: height 0.5s;
   }
 
-  .form {
-    .email,
-    .password,
-    .username {
-      padding-top: 12px;
-      padding-bottom: 12px;
-      height: 48px;
-      border: 1px solid #e4e6f2;
-      letter-spacing: 0.2px;
-
-      &::placeholder {
-        color: #c6cbde;
-      }
-
-      &.is-invalid {
-        border-color: #dc3545;
-      }
-
-      &.is-valid {
-        border-color: #28a745;
-      }
-    }
-
-    ::v-deep.invalid-feedback {
-      font-size: 1rem;
-    }
+  .slide-down-enter,
+  .slide-down-leave-to {
+    height: 0;
   }
-
-  .btn-register {
-    height: 50px;
-    border: 0;
-    font-size: 18px;
-    transition: all 0.2s;
-
-    &:disabled {
-      cursor: not-allowed;
-    }
-
-    .spinner-border {
-      width: 1.5rem;
-      height: 1.5rem;
-      border-width: 0.15em;
-    }
-  }
-}
-
-.slide-down-enter-active,
-.slide-down-leave-active {
-  overflow: hidden;
-  height: 117px;
-  transition: height 0.5s;
-}
-
-.slide-down-enter,
-.slide-down-leave-to {
-  height: 0;
 }
 </style>
