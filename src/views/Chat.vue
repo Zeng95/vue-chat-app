@@ -1,12 +1,15 @@
 <template>
   <div v-if="asyncDataStatus_ready" class="chat">
-    <ChatNavBar />
+    <chat-nav-bar />
 
-    <div class="grid">
+    <div
+      class="layout"
+      :class="{ expanded: memberDetailsShow || channelDetailsShow }"
+    >
       <div class="sidebar">
-        <ChannelList />
+        <channel-list />
 
-        <MemberList />
+        <member-list />
       </div>
 
       <div class="view">
@@ -19,24 +22,31 @@
           >
             <div class="channel-info">
               <div class="name-and-section">
-                <div>
-                  <b-button variant="transparent" class="name btn-unstyled">
-                    <span class="icon-hash-or-circle">
-                      <b-icon-hash v-if="!isPrivate" />
-                      <b-icon-circle-fill v-else />
-                    </span>
+                <b-button
+                  variant="transparent"
+                  class="name btn-unstyled"
+                  @click="toggleDetails"
+                >
+                  <div class="icon-hash-or-circle">
+                    <b-icon-hash v-if="!isPrivate" />
+                    <b-icon-circle
+                      v-else
+                      font-scale="0.6"
+                      class="border border-dark rounded-circle"
+                    />
+                  </div>
 
-                    <span class="name-dim">{{ currentChannel.name }}</span>
-                  </b-button>
-                </div>
+                  <span class="text-dark">{{ currentChannel.name }}</span>
+                </b-button>
 
                 <b-button
                   variant="transparent"
                   class="section-selector btn-unstyled"
-                  v-b-tooltip.hover.bottom
-                  title="Star channel"
+                  v-b-tooltip.hover.bottom="
+                    `Star ${isPrivate ? 'conversation' : 'channel'}`
+                  "
                 >
-                  <b-icon-star />
+                  <b-icon-star font-scale="0.8" />
                 </b-button>
               </div>
 
@@ -62,12 +72,15 @@
             <!-- Details button -->
             <b-button
               variant="transparent"
-              class="details btn-unstyled"
-              v-b-tooltip.hover.bottom
-              :title="`Show ${isPrivate ? 'conversation' : 'channel'} details`"
+              class="btn-open-details btn-unstyled"
+              :class="{ opened: memberDetailsShow || channelDetailsShow }"
+              v-b-tooltip.hover.bottom="
+                `Show ${isPrivate ? 'conversation' : 'channel'} details`
+              "
+              @click="toggleDetails"
             >
               <span class="icon-circle">
-                <b-icon-exclamation-circle />
+                <b-icon-exclamation-circle flip-v />
               </span>
 
               <span class="btn-text">Details</span>
@@ -83,14 +96,14 @@
               header-level="5"
               :lead="`This is a private conversation between you and ${currentChannel.name}.`"
               bg-variant="light"
-              class="banner position-relative"
+              class="banner"
               v-if="isPrivate && bannerShow"
             >
               <template v-slot:header>
                 <div class="d-inline-flex">
                   <span class="icon-presense text-dark-grayish-magenta">
                     <b-icon-hash v-if="!isPrivate" />
-                    <b-icon-circle-fill v-else />
+                    <b-icon-circle v-else />
                   </span>
                   <h1 class="heading">{{ currentChannel.name }}</h1>
                 </div>
@@ -130,7 +143,7 @@
               </div>
             </div>
 
-            <MessageList />
+            <message-list />
           </b-card-body>
 
           <b-card-footer
@@ -140,6 +153,7 @@
             footer-bg-variant="transparent"
           >
             <message-form
+              :focused="messageFormFocused"
               @upload-completed="progressBarCompleted = true"
               @get-progress="getTaskProgress"
               @show-progress-bar="showProgressBar"
@@ -148,53 +162,55 @@
           </b-card-footer>
         </b-card>
       </div>
+
+      <div class="details">
+        <member-details
+          :visible="memberDetailsShow"
+          @hide="memberDetailsShow = !memberDetailsShow"
+        />
+      </div>
     </div>
   </div>
 </template>
 
 <script>
-import ChatNavBar from '@/components/ChatNavBar'
-import ChannelList from '@/components/ChannelList'
-import MessageList from '@/components/MessageList'
-import MessageForm from '@/components/MessageForm'
-import MemberList from '@/components/MemberList'
 import asyncDataStatus from '@/mixins/asyncDataStatus'
 import {
   BIconX,
   BIconHash,
   BIconStar,
   BIconPerson,
-  BIconCircleFill,
+  BIconCircle,
   BIconExclamationCircle
 } from 'bootstrap-vue'
 import { mapState, mapGetters } from 'vuex'
+import ChatNavBar from '@/components/ChatNavBar'
+import ChannelList from '@/components/ChannelList'
+import MessageList from '@/components/MessageList'
+import MessageForm from '@/components/MessageForm'
+import MemberList from '@/components/MemberList'
+import MemberDetails from '@/components/MemberDetails'
 
 export default {
   name: 'Chat',
   mixins: [asyncDataStatus],
   components: {
-    ChatNavBar,
-    ChannelList,
-    MessageList,
-    MessageForm,
-    MemberList,
     BIconX,
     BIconHash,
     BIconStar,
     BIconPerson,
-    BIconCircleFill,
-    BIconExclamationCircle
+    BIconCircle,
+    BIconExclamationCircle,
+    ChatNavBar,
+    MemberList,
+    ChannelList,
+    MessageList,
+    MessageForm,
+    MemberDetails
   },
   computed: {
     ...mapState({ isPrivate: state => state.channels.isPrivate }),
     ...mapGetters('channels', ['currentChannel'])
-  },
-  async beforeCreate() {
-    await this.$store.dispatch('channels/fetchChannels')
-    await this.$store.dispatch('messages/fetchMessages')
-    await this.$store.dispatch('users/fetchUsers')
-
-    this.asyncDataStatus_fetched()
   },
   data() {
     return {
@@ -204,7 +220,12 @@ export default {
       progress: { value: 0, max: 100 },
       progressBarShow: false,
       progressBarAnimated: false,
-      progressBarCompleted: false
+      progressBarCompleted: false,
+
+      memberDetailsShow: false,
+      channelDetailsShow: false,
+
+      messageFormFocused: true
     }
   },
   methods: {
@@ -225,6 +246,7 @@ export default {
         this.progress.value = progress
       }
     },
+
     showProgressBar() {
       this.progressBarShow = true
     },
@@ -232,18 +254,48 @@ export default {
       this.progressBarShow = false
       this.progressBarAnimated = false
       this.progressBarCompleted = false
+    },
+
+    toggleDetails() {
+      this.messageFormFocused = !this.messageFormFocused
+
+      if (this.isPrivate) {
+        this.memberDetailsShow = !this.memberDetailsShow
+      } else {
+        this.channelDetailsShow = !this.channelDetailsShow
+      }
     }
+  },
+  async beforeCreate() {
+    await this.$store.dispatch('channels/fetchChannels')
+    await this.$store.dispatch('messages/fetchMessages')
+    await this.$store.dispatch('users/fetchUsers')
+
+    this.asyncDataStatus_fetched()
   }
 }
 </script>
 
 <style lang="scss" scoped>
 .chat {
-  .grid {
+  width: 100vw;
+  height: 100vh;
+
+  .layout {
     display: grid;
 
     grid-template-rows: auto;
     grid-template-columns: 260px auto;
+
+    &.expanded {
+      grid-template-columns: 260px auto 320px;
+    }
+
+    @media (min-width: 1200px) {
+      &.expanded {
+        grid-template-columns: 260px auto 380px;
+      }
+    }
   }
 
   .sidebar {
@@ -261,15 +313,11 @@ export default {
     .view-header {
       display: flex;
       align-items: center;
+      flex-shrink: 0;
       justify-content: space-between;
       height: 64px;
 
       .name-and-section {
-        display: flex;
-        align-items: baseline;
-      }
-
-      .metadata {
         display: flex;
       }
 
@@ -279,21 +327,10 @@ export default {
         font-weight: 900;
       }
 
-      .name-dim {
-        color: rgba(29, 28, 29, 0.7);
-      }
-
       .icon-hash-or-circle {
         display: flex;
-        align-items: baseline;
         justify-content: center;
         width: 20px;
-        height: 20px;
-
-        > .b-icon {
-          width: 10px;
-          height: 10px;
-        }
       }
 
       .section-selector {
@@ -302,8 +339,7 @@ export default {
         justify-content: center;
         margin-left: 4px;
         width: 20px;
-        height: 20px;
-        border: thin solid transparent;
+        height: 24px;
         color: rgba(29, 28, 29, 0.7);
         transition: background-color 0.16s cubic-bezier(0.36, 0.19, 0.29, 1),
           color 0.16s cubic-bezier(0.36, 0.19, 0.29, 1);
@@ -311,11 +347,10 @@ export default {
         &:hover {
           background-color: rgba(29, 28, 29, 0.04);
         }
+      }
 
-        > .b-icon {
-          width: 13px;
-          height: 13px;
-        }
+      .metadata {
+        display: flex;
       }
 
       .info-members {
@@ -334,7 +369,7 @@ export default {
         color: rgba(29, 28, 29, 0.7);
       }
 
-      .details {
+      .btn-open-details {
         display: flex;
         align-items: center;
         padding: 8px;
@@ -344,6 +379,15 @@ export default {
 
         &:hover {
           background-color: rgba(29, 28, 29, 0.04);
+          color: rgb(29, 28, 29);
+        }
+
+        &:active {
+          background-color: rgba(29, 28, 29, 0.13);
+        }
+
+        &.opened {
+          background-color: rgba(29, 28, 29, 0.13);
           color: rgb(29, 28, 29);
         }
 
@@ -359,6 +403,7 @@ export default {
     }
 
     .banner {
+      position: relative;
       padding: 40px 56px 32px;
       border-bottom: 1px solid rgba(29, 28, 29, 0.13);
 

@@ -30,7 +30,7 @@
 
       <b-popover
         target="popover"
-        triggers="click"
+        triggers="focus"
         placement="bottomright"
         boundary="viewport"
         custom-class="menu mt-0 border-0"
@@ -123,7 +123,7 @@ export default {
       'createChannel'
     ]),
     isActive(channel) {
-      return channel._id === this.currentChannel.id
+      return channel._id === this.currentChannel._id
     },
     changeChannel(channel) {
       this.setPrivate(false)

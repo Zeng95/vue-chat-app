@@ -1,10 +1,6 @@
 <template>
   <div class="message-list" v-chat-scroll="{ always: false, smooth: true }">
-    <p class="nomessages text-secondary" v-if="messages.length === 0">
-      [No messages yet!]
-    </p>
-
-    <div class="messages" v-else>
+    <div class="messages">
       <div v-if="!isPrivate" class="pane-foreword">
         <!-- Channel name -->
         <h1>
@@ -39,7 +35,7 @@
             variant="transparent"
             class="divider-label-pill btn-unstyled bg-white"
           >
-            {{ message.label }}
+            {{ showLabel(message.label) }}
           </b-button>
 
           <div class="divider">
@@ -103,7 +99,19 @@ export default {
       'fetchMessages',
       'fetchPrivateMessages',
       'clearMessagesLocally'
-    ])
+    ]),
+    showLabel(value) {
+      const today = moment().format('dddd, MMMM Do')
+      const yesterday = moment().add(-1, 'days').format('dddd, MMMM Do')
+
+      if (value === today) {
+        return 'Today'
+      } else if (value === yesterday) {
+        return 'Yesterday'
+      } else {
+        return value
+      }
+    }
   },
   watch: {
     currentChannel() {
@@ -151,11 +159,10 @@ export default {
 
   .divider-line {
     position: absolute;
-    top: 50%;
     right: 0;
     left: 0;
+    margin-top: -1px !important;
     border-top: 1px solid rgb(221, 221, 221);
-    transform: translate3d(0, -50%, 0);
   }
 }
 </style>

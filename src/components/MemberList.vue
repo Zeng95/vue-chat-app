@@ -105,7 +105,7 @@ export default {
     }
   },
   methods: {
-    ...mapActions('users', ['updateUserStatus']),
+    ...mapActions('users', ['updateUserStatus', 'setSender']),
     ...mapActions('channels', ['setPrivate', 'setCurrentChannel']),
     addListeners() {
       this.userStatusRef.on('child_added', snapshot => {
@@ -127,14 +127,16 @@ export default {
       })
     },
     isActive(user) {
-      return this.getChannelId(user._id) === this.currentChannel.id
+      return this.getChannelId(user._id) === this.currentChannel._id
     },
     changeChanel(user) {
       const channelId = this.getChannelId(user._id)
       const channel = { _id: channelId, name: user.username }
+      const sender = this.users[user._id]
 
       this.setPrivate(true)
       this.setCurrentChannel(channel)
+      this.setSender(sender)
     },
     getChannelId(userId) {
       // smallerUserId < biggerUserId

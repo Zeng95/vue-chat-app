@@ -6,8 +6,9 @@ import { firestoreDB } from '@/firebase.config'
 // initial state
 const state = () => {
   return {
-    items: {},
-    activeItem: { username: null, name: null, avatar: null }
+    items: {}, // store.state.users.items[id]
+    sender: {},
+    activeItem: {}
   }
 }
 
@@ -15,11 +16,19 @@ const state = () => {
 const getters = {
   currentUser: state => {
     return state.activeItem
+  },
+
+  currentSender: state => {
+    return state.sender
   }
 }
 
 // actions
 const actions = {
+  setSender({ commit }, sender) {
+    commit('SET_CURRENT_SENDER', sender)
+  },
+
   createUser({ commit }, { userId, user }) {
     return new Promise((resolve, reject) => {
       const usersRef = firestoreDB.collection('users')
@@ -111,9 +120,11 @@ const actions = {
 // mutations
 const mutations = {
   SET_CURRENT_USER(state, user) {
-    state.activeItem.username = user.username
-    state.activeItem.name = user.name
-    state.activeItem.avatar = user.avatar
+    state.activeItem = user
+  },
+
+  SET_CURRENT_SENDER(state, sender) {
+    state.sender = sender
   },
 
   SET_STATUS(state, { userId, status }) {

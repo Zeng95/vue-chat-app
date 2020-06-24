@@ -5,7 +5,7 @@ import { firestoreDB } from '@/firebase.config'
 const state = () => {
   return {
     items: {},
-    activeItem: { id: null, name: null },
+    activeItem: {},
     isPrivate: false
   }
 }
@@ -22,9 +22,7 @@ const actions = {
   },
 
   setCurrentChannel({ commit }, channel) {
-    const { _id: id, name } = channel
-
-    commit('SET_CURRENT_CHANNEL', { id, name })
+    commit('SET_CURRENT_CHANNEL', channel)
   },
 
   createChannel({ state }, channelName) {

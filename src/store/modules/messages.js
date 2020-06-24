@@ -13,8 +13,8 @@ const actions = {
     return new Promise((resolve, reject) => {
       const messagesRef = firestoreDB.collection('messages')
 
-      message.userId = rootState.auth.authId
-      message.channelId = rootState.channels.activeItem.id
+      message.authorId = rootState.auth.authId
+      message.channelId = rootState.channels.activeItem._id
 
       // Add a new document with an auto-generated id.
       messagesRef
@@ -27,10 +27,10 @@ const actions = {
   createPrivateMessage({ rootState }, message) {
     return new Promise((resolve, reject) => {
       const messagesRef = firestoreDB.collection('privateMessages')
-      const userIds = rootState.channels.activeItem.id.split('/')
+      const userIds = rootState.channels.activeItem._id.split('/')
 
-      message.userId = rootState.auth.authId
-      message.channelId = rootState.channels.activeItem.id
+      message.authorId = rootState.auth.authId
+      message.channelId = rootState.channels.activeItem._id
 
       // Add a new document with an auto-generated id.
       messagesRef
@@ -48,7 +48,7 @@ const actions = {
         snapshot.docChanges().forEach(change => {
           if (change.type == 'added') {
             const message = change.doc.data()
-            const currentChannelId = rootState.channels.activeItem.id
+            const currentChannelId = rootState.channels.activeItem._id
 
             if (message.channelId === currentChannelId) {
               commit(
@@ -66,7 +66,7 @@ const actions = {
   },
 
   fetchPrivateMessages({ rootState, commit }) {
-    const userIds = rootState.channels.activeItem.id.split('/')
+    const userIds = rootState.channels.activeItem._id.split('/')
 
     return new Promise(resolve => {
       firestoreDB
@@ -78,8 +78,8 @@ const actions = {
           snapshot.docChanges().forEach(change => {
             if (change.type == 'added') {
               const message = change.doc.data()
-              const currentChannelId = rootState.channels.activeItem.id
-              console.log(message.channelId, currentChannelId)
+              const currentChannelId = rootState.channels.activeItem._id
+
               if (message.channelId === currentChannelId) {
                 commit(
                   'SET_ITEM',

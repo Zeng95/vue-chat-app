@@ -1,22 +1,19 @@
 <template>
   <transition name="fade">
     <b-alert
-      v-if="visible"
-      class="position-fixed d-flex align-items-center"
-      :class="classObject"
       fade
       dismissible
+      v-if="visible"
       :variant="variant"
       :show="dismissCountDown"
       @dismissed="hideAlert"
-      @dismiss-count-down="countDownChanged"
+      @dismiss-count-down="changeCountDown"
     >
       <div class="mr-2">
         <b-icon-x-circle-fill v-if="variant === 'danger'" />
         <b-icon-check
           v-if="variant === 'success'"
-          variant="white"
-          class="rounded-circle bg-success"
+          class="rounded-circle bg-success text-white"
         />
       </div>
 
@@ -28,6 +25,7 @@
 <script>
 import { BIconXCircleFill, BIconCheck } from 'bootstrap-vue'
 export default {
+  name: 'AppAlert',
   components: {
     BIconCheck,
     BIconXCircleFill
@@ -35,7 +33,7 @@ export default {
   props: {
     visible: {
       type: Boolean,
-      default: false
+      required: true
     },
     message: {
       type: String,
@@ -43,15 +41,7 @@ export default {
     },
     variant: {
       type: String,
-      default: 'success'
-    }
-  },
-  computed: {
-    classObject() {
-      return {
-        'text-green': this.variant === 'success',
-        'text-red': this.variant === 'danger'
-      }
+      required: true
     }
   },
   data() {
@@ -61,9 +51,10 @@ export default {
     }
   },
   methods: {
-    countDownChanged(dismissCountDown) {
+    changeCountDown(dismissCountDown) {
       this.dismissCountDown = dismissCountDown
     },
+
     showAlert() {
       this.dismissCountDown = this.dismissSecs
     },
@@ -82,16 +73,19 @@ export default {
 
 <style lang="scss" scoped>
 .alert {
+  position: fixed;
   top: 40px;
   left: 50%;
   z-index: 1000;
+  display: flex;
+  align-items: center;
   box-shadow: 0 5px 20px 0 rgba(0, 0, 0, 0.1);
   transform: translate3d(-50%, 0, 0);
 }
 
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.3s, top 0.4s;
+  transition: all 0.2s;
 }
 
 .fade-enter,

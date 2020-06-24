@@ -7,7 +7,7 @@
         vertical-align="center"
       >
         <a href="#" class="avatar" @click="showModal">
-          <b-avatar rounded="sm" :src="users[message.userId].avatar" />
+          <b-avatar rounded="sm" :src="users[message.authorId].avatar" />
         </a>
       </b-media-aside>
 
@@ -16,7 +16,7 @@
         <div v-if="isMoreThan15Mins">
           <!-- 发送人 -->
           <a class="sender mr-2" href="#" @click="showModal">
-            <span>{{ users[message.userId].name }}</span>
+            <span>{{ users[message.authorId].name }}</span>
           </a>
 
           <!-- 时间 -->
@@ -30,7 +30,7 @@
           </a>
 
           <!-- 内容 -->
-          <div v-html="message.content"></div>
+          <div v-html="message.body"></div>
         </div>
 
         <div v-else class="d-flex">
@@ -47,7 +47,7 @@
           </div>
 
           <!-- 内容 -->
-          <div class="flex-grow-1" v-html="message.content"></div>
+          <div class="flex-grow-1" v-html="message.body"></div>
         </div>
       </b-media-body>
     </b-media>
@@ -68,14 +68,14 @@
       <b-card
         img-top
         img-height="260"
-        :img-src="users[message.userId].avatar"
+        :img-src="users[message.authorId].avatar"
         img-alt="Profile photo"
         body-class="p-0"
         class="member-profile-card w-100 border-0"
       >
         <div class="name p-3">
           <a href="#">
-            <span>{{ users[message.userId].name }}</span>
+            <span>{{ users[message.authorId].name }}</span>
           </a>
         </div>
 
@@ -108,7 +108,7 @@ import { mapState } from 'vuex'
 import moment from 'moment'
 
 export default {
-  name: 'MessageItem',
+  name: 'MessageListItem',
   props: {
     message: {
       type: Object,
@@ -144,7 +144,7 @@ export default {
       const maximum = 15 * 60
       const difference =
         this.message.timestamp.seconds - this.prevMessage.timestamp.seconds
-      console.log(difference)
+
       if (difference !== 0) {
         return difference > maximum
       } else {

@@ -58,10 +58,6 @@ body {
   outline: none !important;
 }
 
-::-webkit-scrollbar {
-  display: none;
-}
-
 p {
   margin: 0;
 }
@@ -83,5 +79,9 @@ p {
 .fade-enter,
 .fade-leave-to {
   opacity: 0;
+}
+
+.tooltip {
+  top: 0;
 }
 </style>
