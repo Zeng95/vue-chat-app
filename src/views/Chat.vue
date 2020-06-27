@@ -87,9 +87,20 @@
             </b-button>
           </b-card-header>
 
-          <b-card-body body-class="position-relative p-0 overflow-auto">
+          <b-card-body
+            :body-class="[
+              'position-relative',
+              'p-0',
+              'overflow-auto',
+              {
+                'd-flex': !hasMessages,
+                'align-items-end': !hasMessages
+              }
+            ]"
+            v-chat-scroll="{ always: true, smooth: true }"
+          >
             <!-- Jumbotron -->
-            <b-jumbotron
+            <!-- <b-jumbotron
               fluid
               container-fluid
               header-tag="div"
@@ -120,10 +131,10 @@
               <p class="text">Next, you could…</p>
 
               <b-button variant="primary" href="#">More Info</b-button>
-            </b-jumbotron>
+            </b-jumbotron> -->
 
             <!-- File upload progress bar -->
-            <div class="file-upload-banner">
+            <!-- <div class="file-upload-banner">
               <b-progress
                 v-if="progressBarShow"
                 class="position-absolute"
@@ -141,7 +152,7 @@
 
                 <p v-else>Processing uploaded file…</p>
               </div>
-            </div>
+            </div> -->
 
             <message-list />
           </b-card-body>
@@ -176,7 +187,6 @@
 <script>
 import asyncDataStatus from '@/mixins/asyncDataStatus'
 import {
-  BIconX,
   BIconHash,
   BIconStar,
   BIconPerson,
@@ -195,7 +205,6 @@ export default {
   name: 'Chat',
   mixins: [asyncDataStatus],
   components: {
-    BIconX,
     BIconHash,
     BIconStar,
     BIconPerson,
@@ -209,8 +218,14 @@ export default {
     MemberDetails
   },
   computed: {
-    ...mapState({ isPrivate: state => state.channels.isPrivate }),
-    ...mapGetters('channels', ['currentChannel'])
+    ...mapState({
+      isPrivate: state => state.channels.isPrivate,
+      messages: state => Object.values(state.messages.items)
+    }),
+    ...mapGetters('channels', ['currentChannel']),
+    hasMessages() {
+      return this.messages.length > 0
+    }
   },
   data() {
     return {

@@ -55,12 +55,7 @@
             class="btn-action btn-unstyled d-flex flex-column align-items-center"
             v-b-tooltip.hover.bottom="`Find in @${currentSender.username}`"
           >
-            <div class="icon-container">
-              <b-iconstack>
-                <b-icon-filter-left stacked />
-                <b-icon-search stacked font-scale="0.5" />
-              </b-iconstack>
-            </div>
+            <div class="icon-container"><b-icon-search font-scale="0.9" /></div>
             <span class="label">Find</span>
           </b-button>
 
@@ -76,36 +71,35 @@
           </b-button>
         </div>
 
+        <!-- The About section -->
         <div class="section-info section">
           <b-navbar toggleable class="m-1 p-3">
             <b-navbar-brand class="section-title">About</b-navbar-brand>
 
-            <b-navbar-toggle target="collapse-info" class="btn-unstyled">
-              <template v-slot:default="{ expanded }">
-                <b-icon-chevron-down v-if="expanded" />
-                <b-icon-chevron-right v-else />
-              </template>
+            <b-navbar-toggle
+              target="collapse-info"
+              class="btn-chevron btn-unstyled"
+            >
+              <b-icon-chevron-right font-scale="0.8" variant="dark" />
             </b-navbar-toggle>
 
             <b-collapse id="collapse-info" is-nav>
-              <div class="profile-field"></div>
-              <div class="profile-field"></div>
+              <div class="profile-field">abc</div>
+              <div class="profile-field">abc</div>
             </b-collapse>
           </b-navbar>
         </div>
 
+        <!-- The Pinned section -->
         <div class="section-pinned-items section">
           <b-navbar toggleable class="m-1 p-3">
             <b-navbar-brand class="section-title">Pinned</b-navbar-brand>
 
             <b-navbar-toggle
               target="collapse-pinned-items"
-              class="btn-unstyled"
+              class="btn-chevron btn-unstyled"
             >
-              <template v-slot:default="{ expanded }">
-                <b-icon-chevron-down v-if="expanded" />
-                <b-icon-chevron-right v-else />
-              </template>
+              <b-icon-chevron-right font-scale="0.8" variant="dark" />
             </b-navbar-toggle>
 
             <b-collapse id="collapse-pinned-items" is-nav>
@@ -118,18 +112,16 @@
           </b-navbar>
         </div>
 
+        <!-- The Files section -->
         <div class="section-shared-files section">
           <b-navbar toggleable class="m-1 p-3">
             <b-navbar-brand class="section-title">Files</b-navbar-brand>
 
             <b-navbar-toggle
               target="collapse-shared-files"
-              class="btn-unstyled"
+              class="btn-chevron btn-unstyled"
             >
-              <template v-slot:default="{ expanded }">
-                <b-icon-chevron-down v-if="expanded" />
-                <b-icon-chevron-right v-else />
-              </template>
+              <b-icon-chevron-right font-scale="0.8" variant="dark" />
             </b-navbar-toggle>
 
             <b-collapse id="collapse-shared-files" is-nav>
@@ -150,26 +142,20 @@
 import { mapGetters } from 'vuex'
 import {
   BIconX,
-  BIconstack,
   BIconSearch,
   BIconCircle,
   BIconThreeDots,
-  BIconFilterLeft,
-  BIconChevronRight,
-  BIconChevronDown
+  BIconChevronRight
 } from 'bootstrap-vue'
 
 export default {
   name: 'MemberDetails',
   components: {
     BIconX,
-    BIconstack,
     BIconSearch,
     BIconCircle,
     BIconThreeDots,
-    BIconFilterLeft,
-    BIconChevronRight,
-    BIconChevronDown
+    BIconChevronRight
   },
   props: {
     visible: {
@@ -326,9 +312,24 @@ export default {
       margin: 0;
       margin-right: 8px;
       padding: 0;
+      color: var(--dark-magenta);
       font-weight: 700;
       font-size: inherit;
       line-height: 1.38463;
+    }
+
+    .btn-chevron {
+      width: 20px;
+
+      &.not-collapsed {
+        .b-icon {
+          transform: rotate(90deg);
+        }
+      }
+
+      .b-icon {
+        transition: transform 0.1s ease-in-out;
+      }
     }
   }
 }

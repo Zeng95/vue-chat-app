@@ -1,5 +1,5 @@
 <template>
-  <div class="message-list" v-chat-scroll="{ always: false, smooth: true }">
+  <div class="message-list">
     <div class="messages">
       <div v-if="!isPrivate" class="pane-foreword">
         <!-- Channel name -->
@@ -25,6 +25,36 @@
         <div>
           <b-button variant="transparent">Add description</b-button>
           <b-button variant="transparent">Add people</b-button>
+        </div>
+      </div>
+
+      <div v-else class="pane-foreword">
+        <div class="avatar">
+          <b-button class="btn-sender btn-unstyled" variant="transparent">
+            <b-avatar rounded size="56px" :src="currentSender.avatar" />
+
+            <div>
+              <div class="username font-weight-bold">
+                <span>{{ currentSender.username }}</span>
+                <span class="icon-presence">
+                  <b-icon-circle
+                    font-scale="0.6"
+                    class="border border-dark rounded-circle"
+                  />
+                </span>
+              </div>
+              <div class="name">{{ currentSender.name }}</div>
+            </div>
+          </b-button>
+        </div>
+
+        <div class="description">
+          <p class="d-flex align-items-center">
+            This is the very beginning of your direct message history with
+            <b-button class="btn-mention btn-unstyled" variant="transparent">
+              @{{ currentSender.username }}
+            </b-button>
+          </p>
         </div>
       </div>
 
@@ -56,13 +86,13 @@
 
 <script>
 import { mapState, mapGetters, mapActions } from 'vuex'
-import { BIconHash } from 'bootstrap-vue'
+import { BIconHash, BIconCircle } from 'bootstrap-vue'
 import moment from 'moment'
 import MessageItem from './MessageListItem'
 
 export default {
   name: 'MessageList',
-  components: { MessageItem, BIconHash },
+  components: { MessageItem, BIconHash, BIconCircle },
   computed: {
     ...mapState({
       isPrivate: state => state.channels.isPrivate,
@@ -92,7 +122,8 @@ export default {
         return newArr
       }
     }),
-    ...mapGetters('channels', ['currentChannel'])
+    ...mapGetters('channels', ['currentChannel']),
+    ...mapGetters('users', ['currentSender'])
   },
   methods: {
     ...mapActions('messages', [
@@ -130,10 +161,54 @@ export default {
 
 <style lang="scss" scoped>
 .message-list {
-  margin-bottom: 15px;
+  width: 100%;
 
   .pane-foreword {
     margin: 48px 20px 16px 20px;
+
+    .avatar {
+      margin-bottom: 16px;
+
+      .btn-sender {
+        display: flex;
+        align-items: center;
+      }
+
+      .username,
+      .name {
+        padding-left: 12px;
+        line-height: 18px;
+      }
+
+      .username {
+        display: flex;
+        align-items: baseline;
+        color: var(--dark-magenta);
+      }
+
+      .name {
+        color: var(--dark-grayish-magenta);
+      }
+
+      .icon-presence {
+        display: inline-flex;
+        justify-content: center;
+        width: 20px;
+      }
+    }
+
+    .description {
+      color: var(--dark-magenta);
+      font-size: 1.1rem;
+      line-height: 1.5;
+
+      .btn-mention {
+        padding: 0 2px 1px 2px;
+        border-radius: 3px;
+        background: rgba(29, 155, 209, 0.1);
+        color: rgba(18, 100, 163, 1);
+      }
+    }
   }
 
   .divider-label-pill {
