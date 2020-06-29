@@ -84,4 +84,8 @@ p {
 .tooltip {
   top: 0;
 }
+
+.collapsing {
+  transition: height 0.2s ease-out;
+}
 </style>

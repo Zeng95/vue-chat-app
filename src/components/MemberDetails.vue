@@ -73,65 +73,91 @@
 
         <!-- The About section -->
         <div class="section-info section">
-          <b-navbar toggleable class="m-1 p-3">
-            <b-navbar-brand class="section-title">About</b-navbar-brand>
-
+          <b-navbar class="m-2 p-3">
+            <!-- Icon -->
             <b-navbar-toggle
               target="collapse-info"
-              class="btn-chevron btn-unstyled"
+              class="navbar-chevron btn-unstyled"
             >
+              <div class="section-title">About</div>
               <b-icon-chevron-right font-scale="0.8" variant="dark" />
             </b-navbar-toggle>
-
-            <b-collapse id="collapse-info" is-nav>
-              <div class="profile-field">abc</div>
-              <div class="profile-field">abc</div>
-            </b-collapse>
           </b-navbar>
+
+          <b-collapse id="collapse-info" is-nav accordion="member-details">
+            <div class="field ml-2 pl-3">
+              <div class="label">Display name</div>
+              <div class="value">{{ currentSender.name }}</div>
+            </div>
+
+            <div class="field ml-2 pl-3">
+              <div class="label">Local time</div>
+              <div class="value">{{ localTime }}</div>
+            </div>
+
+            <div class="field ml-2 mb-2 pl-3 pb-3">
+              <div class="label">Email address</div>
+              <div class="value">
+                <b-link :href="`mailto:${currentSender.email}`" target="_blank">
+                  {{ currentSender.email }}
+                </b-link>
+              </div>
+            </div>
+          </b-collapse>
         </div>
 
         <!-- The Pinned section -->
         <div class="section-pinned-items section">
-          <b-navbar toggleable class="m-1 p-3">
-            <b-navbar-brand class="section-title">Pinned</b-navbar-brand>
-
+          <b-navbar toggleable class="m-2 p-3">
             <b-navbar-toggle
               target="collapse-pinned-items"
-              class="btn-chevron btn-unstyled"
+              class="navbar-chevron btn-unstyled"
             >
+              <div class="section-title">Pinned</div>
               <b-icon-chevron-right font-scale="0.8" variant="dark" />
             </b-navbar-toggle>
-
-            <b-collapse id="collapse-pinned-items" is-nav>
-              <b-navbar-nav class="ml-auto">
-                <b-nav-item href="#">Link 1</b-nav-item>
-                <b-nav-item href="#">Link 2</b-nav-item>
-                <b-nav-item href="#" disabled>Disabled</b-nav-item>
-              </b-navbar-nav>
-            </b-collapse>
           </b-navbar>
+
+          <b-collapse
+            id="collapse-pinned-items"
+            is-nav
+            accordion="member-details"
+          >
+            <div class="ml-2 mb-2 pl-3 pb-3">
+              <p class="text-dark-grayish-magenta">
+                No items have been pinned yet! Open the context menu on
+                important messages or files and choose <br />
+                <span class="text-dark-magenta">Pin to this conversation</span>
+                to stick them here.
+              </p>
+            </div>
+          </b-collapse>
         </div>
 
         <!-- The Files section -->
         <div class="section-shared-files section">
-          <b-navbar toggleable class="m-1 p-3">
-            <b-navbar-brand class="section-title">Files</b-navbar-brand>
-
+          <b-navbar toggleable class="m-2 p-3">
             <b-navbar-toggle
               target="collapse-shared-files"
-              class="btn-chevron btn-unstyled"
+              class="navbar-chevron btn-unstyled"
             >
+              <div class="section-title">Files</div>
               <b-icon-chevron-right font-scale="0.8" variant="dark" />
             </b-navbar-toggle>
-
-            <b-collapse id="collapse-shared-files" is-nav>
-              <b-navbar-nav class="ml-auto">
-                <b-nav-item href="#">Link 1</b-nav-item>
-                <b-nav-item href="#">Link 2</b-nav-item>
-                <b-nav-item href="#" disabled>Disabled</b-nav-item>
-              </b-navbar-nav>
-            </b-collapse>
           </b-navbar>
+
+          <b-collapse
+            id="collapse-shared-files"
+            is-nav
+            class="px-3 pb-3 mx-2 mb-2"
+            accordion="member-details"
+          >
+            <b-navbar-nav class="ml-auto">
+              <b-nav-item href="#">Link 1</b-nav-item>
+              <b-nav-item href="#">Link 2</b-nav-item>
+              <b-nav-item href="#" disabled>Disabled</b-nav-item>
+            </b-navbar-nav>
+          </b-collapse>
         </div>
       </div>
     </template>
@@ -147,6 +173,7 @@ import {
   BIconThreeDots,
   BIconChevronRight
 } from 'bootstrap-vue'
+import moment from 'moment'
 
 export default {
   name: 'MemberDetails',
@@ -180,18 +207,29 @@ export default {
   },
   data() {
     return {
-      detailsShow: this.visible
+      detailsShow: this.visible,
+
+      localTime: null
     }
   },
   methods: {
     hide() {
       this.$emit('hide')
+    },
+    getLocalTime() {
+      this.localTime = moment().format('LT')
+
+      clearTimeout(this.timer)
+      this.timer = setTimeout(this.getLocalTime, 1000)
     }
   },
   watch: {
     visible(value) {
       this.detailsShow = value
     }
+  },
+  created() {
+    this.getLocalTime()
   }
 }
 </script>
@@ -307,19 +345,10 @@ export default {
   .section {
     border-bottom: 1px solid rgba(29, 28, 29, 0.13);
 
-    .section-title {
-      flex-grow: 1;
-      margin: 0;
-      margin-right: 8px;
-      padding: 0;
-      color: var(--dark-magenta);
-      font-weight: 700;
-      font-size: inherit;
-      line-height: 1.38463;
-    }
-
-    .btn-chevron {
-      width: 20px;
+    .navbar-chevron {
+      display: flex;
+      align-items: center;
+      width: 100%;
 
       &.not-collapsed {
         .b-icon {
@@ -328,8 +357,34 @@ export default {
       }
 
       .b-icon {
-        transition: transform 0.1s ease-in-out;
+        transition: transform 0.2s ease-in-out;
       }
+
+      .section-title {
+        flex-grow: 1;
+        margin: 0;
+        margin-right: 8px;
+        padding: 0;
+        color: var(--dark-magenta);
+        text-align: left;
+        font-weight: 700;
+        font-size: 15px;
+        line-height: 1.38463;
+      }
+    }
+  }
+
+  .section-info {
+    .field {
+      padding: 0 16px 12px 0;
+    }
+
+    .label {
+      color: rgba(29, 28, 29, 0.7);
+      font-weight: 400;
+      font-weight: 700;
+      font-size: 13px;
+      line-height: 1.38463;
     }
   }
 }
