@@ -1,5 +1,5 @@
 <template>
-  <div class="message-form">
+  <div class="message-form px-4">
     <div
       class="message-input position-relative"
       :class="{
@@ -172,7 +172,6 @@
                 v-b-tooltip.hover="'Attach file'"
                 variant="transparent"
                 class="btn-icon btn-file btn-unstyled"
-                @click.stop="toggleFileUpload"
               >
                 <b-icon-paperclip flip-h />
               </b-button>
@@ -182,7 +181,6 @@
                 triggers="focus"
                 placement="topleft"
                 custom-class="popover-upload menu mt-0 border-0"
-                :show="fileUploadShow"
                 @hide="hideFileUpload"
               >
                 <p class="menu-item-header">Add a file from…</p>
@@ -213,7 +211,7 @@
                 v-b-tooltip.hover="'Emoji'"
                 variant="transparent"
                 class="btn-icon btn-emoji btn-unstyled"
-                @click.stop="toggleEmojiPicker"
+                @click.stop="showEmojiPicker"
               >
                 <b-icon-emoji-smile class="icon-emoji-smile" />
 
@@ -317,8 +315,7 @@ export default {
   name: 'MessageForm',
   props: {
     focused: {
-      type: Boolean,
-      required: true
+      type: Boolean
     }
   },
   components: {
@@ -395,6 +392,8 @@ export default {
           })
         ],
         onFocus: ({ state, view }) => {
+          this.messageFormFocused = true
+
           if (this.emoji !== null) {
             const div = document.createElement('div')
             div.innerHTML = this.emoji.native
@@ -406,6 +405,9 @@ export default {
             view.dispatch(transaction)
             this.emoji = null
           }
+        },
+        onBlur: () => {
+          // this.messageFormFocused = false
         },
         onUpdate: ({ getHTML }) => {
           const div = document.createElement('div')
@@ -507,54 +509,28 @@ export default {
     },
 
     // File upload
-    toggleFileUpload() {
-      if (!this.fileUploadShow) {
-        this.showFileUpload()
-      } else {
-        this.hideFileUpload()
-      }
-    },
-    showFileUpload() {
-      this.fileUploadShow = true
-
-      this.messageFormFocused = false
-    },
     hideFileUpload() {
-      this.fileUploadShow = false
-
-      this.messageFormFocused = true
-      this.editor.focus()
+      this.focusMessageForm()
     },
 
     // Emoji picker
-    toggleEmojiPicker() {
-      if (!this.emojiPickerShow) {
-        this.showEmojiPicker()
-      } else {
-        this.hideEmojiPicker()
-      }
-    },
     showEmojiPicker() {
       this.emojiPickerShow = true
       this.emojiPickerFocused = true
-
-      this.messageFormFocused = false
     },
     hideEmojiPicker() {
       this.emojiPickerShow = false
-
-      this.messageFormFocused = true
-      this.editor.focus()
+      this.focusMessageForm()
     },
     addEmoji(value) {
       this.emoji = value
     },
 
     focusMessageForm() {
-      this.messageFormFocused = true
+      this.editor.focus()
     },
     blurMessageForm() {
-      this.messageFormFocused = false
+      this.editor.blur()
     },
     async sendMessage() {
       try {
@@ -579,7 +555,9 @@ export default {
         this.alertVariant = 'danger'
       } finally {
         // Clear message
+        this.message = null
         this.editor.clearContent()
+        this.editor.focus()
       }
     }
   },
@@ -587,9 +565,6 @@ export default {
     ClickOutside
   },
   watch: {
-    focused(value) {
-      this.messageFormFocused = value
-    },
     currentChannel(value) {
       const prefix = 'Message'
 
@@ -608,8 +583,6 @@ export default {
 
 <style lang="scss" scoped>
 .message-form {
-  padding: 0 20px;
-
   .btn-icon {
     display: flex;
     align-items: center;

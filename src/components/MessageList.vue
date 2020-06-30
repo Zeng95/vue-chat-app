@@ -1,85 +1,104 @@
 <template>
   <div class="message-list">
-    <div class="messages">
-      <div v-if="!isPrivate" class="pane-foreword">
-        <!-- Channel name -->
-        <h1>
-          <span class="icon-hash">
-            <b-icon-hash />
-          </span>
+    <div v-if="!isPrivate" class="pane-foreword px-4 pb-3">
+      <!-- Channel name -->
+      <h1>
+        <span class="icon-hash">
+          <b-icon-hash />
+        </span>
 
+        <span>{{ currentChannel.name }}</span>
+      </h1>
+
+      <!-- 段落 -->
+      <p>
+        You created this channel today. This is the very beginning of the
+        <strong>
+          <span class="icon-hash"><b-icon-hash /></span>
           <span>{{ currentChannel.name }}</span>
-        </h1>
+        </strong>
+        channel.
+      </p>
 
-        <!-- 段落 -->
-        <p>
-          You created this channel today. This is the very beginning of the
-          <strong>
-            <span class="icon-hash"><b-icon-hash /></span>
-            <span>{{ currentChannel.name }}</span>
-          </strong>
-          channel.
-        </p>
-
-        <!-- 按钮 -->
-        <div>
-          <b-button variant="transparent">Add description</b-button>
-          <b-button variant="transparent">Add people</b-button>
-        </div>
+      <!-- 按钮 -->
+      <div>
+        <b-button variant="transparent">Add description</b-button>
+        <b-button variant="transparent">Add people</b-button>
       </div>
+    </div>
 
-      <div v-else class="pane-foreword">
-        <div class="avatar">
-          <b-button class="btn-sender btn-unstyled" variant="transparent">
-            <b-avatar rounded size="56px" :src="currentSender.avatar" />
+    <div v-else class="pane-foreword px-4 pb-3">
+      <div class="avatar">
+        <b-button class="btn-sender btn-unstyled" variant="transparent">
+          <b-avatar rounded size="56px" :src="currentSender.avatar" />
 
-            <div>
-              <div class="username font-weight-bold">
-                <span>{{ currentSender.username }}</span>
-                <span class="icon-presence">
-                  <b-icon-circle
-                    font-scale="0.6"
-                    class="border border-dark rounded-circle"
-                  />
-                </span>
-              </div>
-              <div class="name">{{ currentSender.name }}</div>
+          <div>
+            <div class="username font-weight-bold">
+              <span>{{ currentSender.name }}</span>
+              <span class="icon-presence">
+                <b-icon-circle
+                  font-scale="0.6"
+                  class="border border-dark rounded-circle"
+                />
+              </span>
             </div>
-          </b-button>
-        </div>
-
-        <div class="description">
-          <p class="d-flex align-items-center">
-            This is the very beginning of your direct message history with
-            <b-button class="btn-mention btn-unstyled" variant="transparent">
-              @{{ currentSender.username }}
-            </b-button>
-          </p>
-        </div>
-      </div>
-
-      <div v-for="message in messages" :key="message.label">
-        <div class="position-relative">
-          <b-button
-            pill
-            variant="transparent"
-            class="divider-label-pill btn-unstyled bg-white"
-          >
-            {{ showLabel(message.label) }}
-          </b-button>
-
-          <div class="divider">
-            <hr class="divider-line m-0" />
+            <div class="name">{{ currentSender.name }}</div>
           </div>
-        </div>
-
-        <message-item
-          v-for="(item, index) in message.items"
-          :key="item._id"
-          :message="item"
-          :prevMessage="index === 0 ? item : message.items[index - 1]"
-        />
+        </b-button>
       </div>
+
+      <div class="description">
+        <p class="d-flex align-items-center">
+          This is the very beginning of your direct message history with
+          <b-button
+            id="tooltip-target-mention"
+            class="btn-mention btn-unstyled"
+            variant="transparent"
+          >
+            @{{ currentSender.name }}
+          </b-button>
+
+          <b-tooltip
+            target="tooltip-target-mention"
+            triggers="hover"
+            boundary="viewport"
+          >
+            <div class="d-flex">
+              <b-avatar rounded :src="currentSender.avatar" />
+              <span>{{ currentSender.name }}</span>
+              <span class="icon-presence">
+                <b-icon-circle
+                  font-scale="0.6"
+                  class="border border-white rounded-circle"
+                />
+              </span>
+            </div>
+          </b-tooltip>
+        </p>
+      </div>
+    </div>
+
+    <div v-for="message in messages" :key="message.label" class="messages mb-3">
+      <div class="position-relative">
+        <b-button
+          pill
+          variant="transparent"
+          class="divider-label-pill btn-unstyled bg-white"
+        >
+          {{ showLabel(message.label) }}
+        </b-button>
+
+        <div class="divider">
+          <hr class="divider-line m-0" />
+        </div>
+      </div>
+
+      <message-item
+        v-for="(item, index) in message.items"
+        :key="item._id"
+        :message="item"
+        :prevMessage="index === 0 ? item : message.items[index - 1]"
+      />
     </div>
   </div>
 </template>
@@ -125,6 +144,11 @@ export default {
     ...mapGetters('channels', ['currentChannel']),
     ...mapGetters('users', ['currentSender'])
   },
+  data() {
+    return {
+      messageListClientHeight: null
+    }
+  },
   methods: {
     ...mapActions('messages', [
       'fetchMessages',
@@ -145,14 +169,17 @@ export default {
     }
   },
   watch: {
-    currentChannel() {
-      console.log('channel changed')
+    async currentChannel() {
       this.clearMessagesLocally()
 
-      if (this.isPrivate) {
-        this.fetchPrivateMessages()
-      } else {
-        this.fetchMessages()
+      try {
+        if (this.isPrivate) {
+          await this.fetchPrivateMessages()
+        } else {
+          await this.fetchMessages()
+        }
+      } catch (error) {
+        console.log(error)
       }
     }
   }
@@ -161,10 +188,14 @@ export default {
 
 <style lang="scss" scoped>
 .message-list {
-  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-width: 100%;
+  min-height: 100%;
 
   .pane-foreword {
-    margin: 48px 20px 16px 20px;
+    padding-top: 48px;
 
     .avatar {
       margin-bottom: 16px;
@@ -188,12 +219,7 @@ export default {
 
       .name {
         color: var(--dark-grayish-magenta);
-      }
-
-      .icon-presence {
-        display: inline-flex;
-        justify-content: center;
-        width: 20px;
+        text-align: left;
       }
     }
 
@@ -203,11 +229,24 @@ export default {
       line-height: 1.5;
 
       .btn-mention {
+        margin-left: 4px;
         padding: 0 2px 1px 2px;
         border-radius: 3px;
         background: rgba(29, 155, 209, 0.1);
-        color: rgba(18, 100, 163, 1);
+        color: rgb(18, 100, 163);
+        font-size: 1.1rem;
+
+        &:hover {
+          background: rgba(29, 155, 209, 0.2);
+          color: rgb(11, 76, 140);
+        }
       }
+    }
+
+    .icon-presence {
+      display: inline-flex;
+      justify-content: center;
+      width: 20px;
     }
   }
 

@@ -88,15 +88,7 @@
           </b-card-header>
 
           <b-card-body
-            :body-class="[
-              'position-relative',
-              'p-0',
-              'overflow-auto',
-              {
-                'd-flex': !hasMessages,
-                'align-items-end': !hasMessages
-              }
-            ]"
+            :body-class="['position-relative', 'p-0', 'overflow-auto']"
             v-chat-scroll="{ always: true, smooth: true }"
           >
             <!-- Jumbotron -->
@@ -222,16 +214,10 @@ export default {
       isPrivate: state => state.channels.isPrivate,
       messages: state => Object.values(state.messages.items)
     }),
-    ...mapGetters('channels', ['currentChannel']),
-    hasMessages() {
-      return this.messages.length > 0
-    }
+    ...mapGetters('channels', ['currentChannel'])
   },
   data() {
     return {
-      bannerShow: true,
-      fileName: null,
-
       progress: { value: 0, max: 100 },
       progressBarShow: false,
       progressBarAnimated: false,
@@ -240,7 +226,10 @@ export default {
       memberDetailsShow: false,
       channelDetailsShow: false,
 
-      messageFormFocused: true
+      messageFormFocused: true,
+
+      bannerShow: true,
+      fileName: null
     }
   },
   methods: {
@@ -272,8 +261,6 @@ export default {
     },
 
     toggleDetails() {
-      this.messageFormFocused = !this.messageFormFocused
-
       if (this.isPrivate) {
         this.memberDetailsShow = !this.memberDetailsShow
       } else {

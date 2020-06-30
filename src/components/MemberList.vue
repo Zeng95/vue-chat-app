@@ -42,7 +42,7 @@
               <span class="icon-circle">
                 <b-icon-circle />
               </span>
-              <span class="name">{{ user.username }}</span>
+              <span class="name">{{ user.name }}</span>
             </div>
 
             <!-- Status -->
@@ -131,7 +131,7 @@ export default {
     },
     changeChanel(user) {
       const channelId = this.getChannelId(user._id)
-      const channel = { _id: channelId, name: user.username }
+      const channel = { _id: channelId, name: user.name }
       const sender = this.users[user._id]
 
       this.setPrivate(true)
@@ -222,13 +222,7 @@ export default {
     }
   }
 
-  .name {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    line-height: 1;
-  }
-
+  .name,
   .status {
     line-height: 1;
   }
